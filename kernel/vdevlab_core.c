@@ -10,16 +10,25 @@
 #include <linux/err.h>
 #include <linux/fs.h>
 #include <linux/init.h>
+#include <linux/kfifo.h>
 #include <linux/module.h>
+#include <linux/mutex.h>
 #include <linux/version.h>
+#include <linux/wait.h>
 
 #define VDEVLAB_DEVICE_NAME "vdevlab0"
 #define VDEVLAB_CLASS_NAME  "vdevlab"
+#define VDEVLAB_FIFO_SIZE   4096
 
 static dev_t vdevlab_dev;
 static struct cdev vdevlab_cdev;
 static struct class *vdevlab_class;
 static struct device *vdevlab_device;
+
+static struct kfifo vdevlab_fifo;
+static DEFINE_MUTEX(vdevlab_fifo_lock);
+static DECLARE_WAIT_QUEUE_HEAD(vdevlab_readq);
+static DECLARE_WAIT_QUEUE_HEAD(vdevlab_writeq);
 
 static int vdevlab_open(struct inode *inode, struct file *file)
 {
@@ -31,10 +40,106 @@ static int vdevlab_release(struct inode *inode, struct file *file)
 	return 0;
 }
 
+static ssize_t vdevlab_read(struct file *file, char __user *buf,
+			   size_t count, loff_t *ppos)
+{
+	unsigned int copied = 0;
+	unsigned int to_copy;
+	int ret;
+
+	if (!count)
+		return 0;
+
+	for (;;) {
+		if (file->f_flags & O_NONBLOCK) {
+			if (kfifo_is_empty(&vdevlab_fifo))
+				return -EAGAIN;
+		} else {
+			ret = wait_event_interruptible(vdevlab_readq,
+						       !kfifo_is_empty(&vdevlab_fifo));
+			if (ret)
+				return ret;
+		}
+
+		ret = mutex_lock_interruptible(&vdevlab_fifo_lock);
+		if (ret)
+			return ret;
+
+		if (!kfifo_is_empty(&vdevlab_fifo))
+			break;
+
+		mutex_unlock(&vdevlab_fifo_lock);
+
+		if (file->f_flags & O_NONBLOCK)
+			return -EAGAIN;
+	}
+
+	to_copy = min_t(size_t, count, kfifo_len(&vdevlab_fifo));
+	ret = kfifo_to_user(&vdevlab_fifo, buf, to_copy, &copied);
+	mutex_unlock(&vdevlab_fifo_lock);
+
+	if (copied)
+		wake_up_interruptible(&vdevlab_writeq);
+
+	if (ret)
+		return copied ? copied : ret;
+
+	return copied;
+}
+
+static ssize_t vdevlab_write(struct file *file, const char __user *buf,
+			    size_t count, loff_t *ppos)
+{
+	unsigned int copied = 0;
+	unsigned int to_copy;
+	int ret;
+
+	if (!count)
+		return 0;
+
+	for (;;) {
+		if (file->f_flags & O_NONBLOCK) {
+			if (kfifo_is_full(&vdevlab_fifo))
+				return -EAGAIN;
+		} else {
+			ret = wait_event_interruptible(vdevlab_writeq,
+						       !kfifo_is_full(&vdevlab_fifo));
+			if (ret)
+				return ret;
+		}
+
+		ret = mutex_lock_interruptible(&vdevlab_fifo_lock);
+		if (ret)
+			return ret;
+
+		if (!kfifo_is_full(&vdevlab_fifo))
+			break;
+
+		mutex_unlock(&vdevlab_fifo_lock);
+
+		if (file->f_flags & O_NONBLOCK)
+			return -EAGAIN;
+	}
+
+	to_copy = min_t(size_t, count, kfifo_avail(&vdevlab_fifo));
+	ret = kfifo_from_user(&vdevlab_fifo, buf, to_copy, &copied);
+	mutex_unlock(&vdevlab_fifo_lock);
+
+	if (copied)
+		wake_up_interruptible(&vdevlab_readq);
+
+	if (ret)
+		return copied ? copied : ret;
+
+	return copied;
+}
+
 static const struct file_operations vdevlab_fops = {
 	.owner = THIS_MODULE,
 	.open = vdevlab_open,
 	.release = vdevlab_release,
+	.read = vdevlab_read,
+	.write = vdevlab_write,
 	.llseek = no_llseek,
 };
 
@@ -42,10 +147,16 @@ static int __init vdevlab_init(void)
 {
 	int ret;
 
+	ret = kfifo_alloc(&vdevlab_fifo, VDEVLAB_FIFO_SIZE, GFP_KERNEL);
+	if (ret) {
+		pr_err("vdevlab: failed to allocate FIFO: %d\n", ret);
+		return ret;
+	}
+
 	ret = alloc_chrdev_region(&vdevlab_dev, 0, 1, VDEVLAB_DEVICE_NAME);
 	if (ret) {
 		pr_err("vdevlab: failed to allocate device number: %d\n", ret);
-		return ret;
+		goto err_free_fifo;
 	}
 
 	cdev_init(&vdevlab_cdev, &vdevlab_fops);
@@ -76,8 +187,9 @@ static int __init vdevlab_init(void)
 		goto err_destroy_class;
 	}
 
-	pr_info("vdevlab: /dev/%s registered (major=%u, minor=%u)\n",
-		VDEVLAB_DEVICE_NAME, MAJOR(vdevlab_dev), MINOR(vdevlab_dev));
+	pr_info("vdevlab: /dev/%s registered (major=%u, minor=%u, fifo=%u bytes)\n",
+		VDEVLAB_DEVICE_NAME, MAJOR(vdevlab_dev), MINOR(vdevlab_dev),
+		VDEVLAB_FIFO_SIZE);
 	return 0;
 
 err_destroy_class:
@@ -86,6 +198,8 @@ err_del_cdev:
 	cdev_del(&vdevlab_cdev);
 err_unregister_chrdev:
 	unregister_chrdev_region(vdevlab_dev, 1);
+err_free_fifo:
+	kfifo_free(&vdevlab_fifo);
 	return ret;
 }
 
@@ -95,6 +209,7 @@ static void __exit vdevlab_exit(void)
 	class_destroy(vdevlab_class);
 	cdev_del(&vdevlab_cdev);
 	unregister_chrdev_region(vdevlab_dev, 1);
+	kfifo_free(&vdevlab_fifo);
 
 	pr_info("vdevlab: /dev/%s unregistered\n", VDEVLAB_DEVICE_NAME);
 }
