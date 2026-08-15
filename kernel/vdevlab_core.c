@@ -13,6 +13,7 @@
 #include <linux/kfifo.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
+#include <linux/poll.h>
 #include <linux/version.h>
 #include <linux/wait.h>
 
@@ -134,12 +135,33 @@ static ssize_t vdevlab_write(struct file *file, const char __user *buf,
 	return copied;
 }
 
+static __poll_t vdevlab_poll(struct file *file, poll_table *wait)
+{
+	__poll_t mask = 0;
+
+	poll_wait(file, &vdevlab_readq, wait);
+	poll_wait(file, &vdevlab_writeq, wait);
+
+	mutex_lock(&vdevlab_fifo_lock);
+
+	if (!kfifo_is_empty(&vdevlab_fifo))
+		mask |= EPOLLIN | EPOLLRDNORM;
+
+	if (!kfifo_is_full(&vdevlab_fifo))
+		mask |= EPOLLOUT | EPOLLWRNORM;
+
+	mutex_unlock(&vdevlab_fifo_lock);
+
+	return mask;
+}
+
 static const struct file_operations vdevlab_fops = {
 	.owner = THIS_MODULE,
 	.open = vdevlab_open,
 	.release = vdevlab_release,
 	.read = vdevlab_read,
 	.write = vdevlab_write,
+	.poll = vdevlab_poll,
 	.llseek = no_llseek,
 };
 
