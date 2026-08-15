@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 obj-m += vdevlab_core.o
+ccflags-y += -I$(src)/../include
 
 KDIR ?= /lib/modules/$(shell uname -r)/build
 
