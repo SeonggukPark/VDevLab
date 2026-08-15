@@ -6,6 +6,7 @@
  */
 
 #include <linux/cdev.h>
+#include <linux/delay.h>
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/fs.h>
@@ -14,12 +15,16 @@
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/poll.h>
+#include <linux/uaccess.h>
 #include <linux/version.h>
 #include <linux/wait.h>
+
+#include "vdevlab.h"
 
 #define VDEVLAB_DEVICE_NAME "vdevlab0"
 #define VDEVLAB_CLASS_NAME  "vdevlab"
 #define VDEVLAB_FIFO_SIZE   4096
+#define VDEVLAB_MAX_DELAY_MS 10000
 
 static dev_t vdevlab_dev;
 static struct cdev vdevlab_cdev;
@@ -31,6 +36,9 @@ static DEFINE_MUTEX(vdevlab_fifo_lock);
 static DECLARE_WAIT_QUEUE_HEAD(vdevlab_readq);
 static DECLARE_WAIT_QUEUE_HEAD(vdevlab_writeq);
 
+static struct vdevlab_fault_config vdevlab_fault;
+static DEFINE_MUTEX(vdevlab_fault_lock);
+
 static int vdevlab_open(struct inode *inode, struct file *file)
 {
 	return 0;
@@ -39,6 +47,30 @@ static int vdevlab_open(struct inode *inode, struct file *file)
 static int vdevlab_release(struct inode *inode, struct file *file)
 {
 	return 0;
+}
+
+static int vdevlab_apply_fault(void)
+{
+	struct vdevlab_fault_config fault;
+
+	mutex_lock(&vdevlab_fault_lock);
+	fault = vdevlab_fault;
+	mutex_unlock(&vdevlab_fault_lock);
+
+	switch (fault.type) {
+	case VDEVLAB_FAULT_NONE:
+		return 0;
+	case VDEVLAB_FAULT_EIO:
+		return -EIO;
+	case VDEVLAB_FAULT_DELAY:
+		if (fault.delay_ms)
+			msleep(fault.delay_ms);
+		return 0;
+	case VDEVLAB_FAULT_DISCONNECT:
+		return -ENODEV;
+	default:
+		return -EINVAL;
+	}
 }
 
 static ssize_t vdevlab_read(struct file *file, char __user *buf,
@@ -50,6 +82,10 @@ static ssize_t vdevlab_read(struct file *file, char __user *buf,
 
 	if (!count)
 		return 0;
+
+	ret = vdevlab_apply_fault();
+	if (ret)
+		return ret;
 
 	for (;;) {
 		if (file->f_flags & O_NONBLOCK) {
@@ -98,6 +134,10 @@ static ssize_t vdevlab_write(struct file *file, const char __user *buf,
 	if (!count)
 		return 0;
 
+	ret = vdevlab_apply_fault();
+	if (ret)
+		return ret;
+
 	for (;;) {
 		if (file->f_flags & O_NONBLOCK) {
 			if (kfifo_is_full(&vdevlab_fifo))
@@ -137,10 +177,18 @@ static ssize_t vdevlab_write(struct file *file, const char __user *buf,
 
 static __poll_t vdevlab_poll(struct file *file, poll_table *wait)
 {
+	struct vdevlab_fault_config fault;
 	__poll_t mask = 0;
 
 	poll_wait(file, &vdevlab_readq, wait);
 	poll_wait(file, &vdevlab_writeq, wait);
+
+	mutex_lock(&vdevlab_fault_lock);
+	fault = vdevlab_fault;
+	mutex_unlock(&vdevlab_fault_lock);
+
+	if (fault.type == VDEVLAB_FAULT_DISCONNECT)
+		return EPOLLERR | EPOLLHUP;
 
 	mutex_lock(&vdevlab_fifo_lock);
 
@@ -155,6 +203,58 @@ static __poll_t vdevlab_poll(struct file *file, poll_table *wait)
 	return mask;
 }
 
+static long vdevlab_ioctl(struct file *file, unsigned int cmd,
+			  unsigned long arg)
+{
+	struct vdevlab_fault_config config;
+
+	switch (cmd) {
+	case VDEVLAB_IOC_SET_FAULT:
+		if (copy_from_user(&config, (void __user *)arg, sizeof(config)))
+			return -EFAULT;
+
+		if (config.type > VDEVLAB_FAULT_DISCONNECT)
+			return -EINVAL;
+
+		if (config.type == VDEVLAB_FAULT_DELAY) {
+			if (!config.delay_ms || config.delay_ms > VDEVLAB_MAX_DELAY_MS)
+				return -EINVAL;
+		} else {
+			config.delay_ms = 0;
+		}
+
+		mutex_lock(&vdevlab_fault_lock);
+		vdevlab_fault = config;
+		mutex_unlock(&vdevlab_fault_lock);
+
+		wake_up_interruptible(&vdevlab_readq);
+		wake_up_interruptible(&vdevlab_writeq);
+		return 0;
+
+	case VDEVLAB_IOC_GET_FAULT:
+		mutex_lock(&vdevlab_fault_lock);
+		config = vdevlab_fault;
+		mutex_unlock(&vdevlab_fault_lock);
+
+		if (copy_to_user((void __user *)arg, &config, sizeof(config)))
+			return -EFAULT;
+		return 0;
+
+	case VDEVLAB_IOC_CLEAR_FAULT:
+		mutex_lock(&vdevlab_fault_lock);
+		vdevlab_fault.type = VDEVLAB_FAULT_NONE;
+		vdevlab_fault.delay_ms = 0;
+		mutex_unlock(&vdevlab_fault_lock);
+
+		wake_up_interruptible(&vdevlab_readq);
+		wake_up_interruptible(&vdevlab_writeq);
+		return 0;
+
+	default:
+		return -ENOTTY;
+	}
+}
+
 static const struct file_operations vdevlab_fops = {
 	.owner = THIS_MODULE,
 	.open = vdevlab_open,
@@ -162,12 +262,18 @@ static const struct file_operations vdevlab_fops = {
 	.read = vdevlab_read,
 	.write = vdevlab_write,
 	.poll = vdevlab_poll,
+	.unlocked_ioctl = vdevlab_ioctl,
 	.llseek = no_llseek,
 };
 
 static int __init vdevlab_init(void)
 {
 	int ret;
+
+	mutex_lock(&vdevlab_fault_lock);
+	vdevlab_fault.type = VDEVLAB_FAULT_NONE;
+	vdevlab_fault.delay_ms = 0;
+	mutex_unlock(&vdevlab_fault_lock);
 
 	ret = kfifo_alloc(&vdevlab_fifo, VDEVLAB_FIFO_SIZE, GFP_KERNEL);
 	if (ret) {
