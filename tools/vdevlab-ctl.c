@@ -18,7 +18,7 @@ static void usage(const char *prog)
 		"  %s get\n"
 		"  %s clear\n"
 		"  %s set none\n"
-		"  %s set eio\n"
+		"  %s set eio <count>\n"
 		"  %s set delay <milliseconds>\n"
 		"  %s set disconnect\n",
 		prog, prog, prog, prog, prog, prog);
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 {
 	struct vdevlab_fault_config config = {0};
 	char *end;
-	long delay;
+	long value;
 	int fd;
 	int ret = 1;
 
@@ -66,6 +66,8 @@ int main(int argc, char **argv)
 		}
 
 		printf("fault=%s", fault_name(config.type));
+		if (config.type == VDEVLAB_FAULT_EIO)
+			printf(" remaining=%u", config.repeat);
 		if (config.type == VDEVLAB_FAULT_DELAY)
 			printf(" delay_ms=%u", config.delay_ms);
 		putchar('\n');
@@ -90,10 +92,33 @@ int main(int argc, char **argv)
 	}
 
 	if (!strcmp(argv[2], "none")) {
+		if (argc != 3) {
+			usage(argv[0]);
+			goto out;
+		}
 		config.type = VDEVLAB_FAULT_NONE;
 	} else if (!strcmp(argv[2], "eio")) {
+		if (argc != 4) {
+			usage(argv[0]);
+			goto out;
+		}
+
+		errno = 0;
+		value = strtol(argv[3], &end, 10);
+		if (errno || *end != '\0' || value <= 0 ||
+		    value > VDEVLAB_MAX_FAULT_REPEAT) {
+			fprintf(stderr, "count must be between 1 and %u\n",
+				VDEVLAB_MAX_FAULT_REPEAT);
+			goto out;
+		}
+
 		config.type = VDEVLAB_FAULT_EIO;
+		config.repeat = (unsigned int)value;
 	} else if (!strcmp(argv[2], "disconnect")) {
+		if (argc != 3) {
+			usage(argv[0]);
+			goto out;
+		}
 		config.type = VDEVLAB_FAULT_DISCONNECT;
 	} else if (!strcmp(argv[2], "delay")) {
 		if (argc != 4) {
@@ -102,14 +127,16 @@ int main(int argc, char **argv)
 		}
 
 		errno = 0;
-		delay = strtol(argv[3], &end, 10);
-		if (errno || *end != '\0' || delay <= 0 || delay > 10000) {
-			fprintf(stderr, "delay must be between 1 and 10000 ms\n");
+		value = strtol(argv[3], &end, 10);
+		if (errno || *end != '\0' || value <= 0 ||
+		    value > VDEVLAB_MAX_DELAY_MS) {
+			fprintf(stderr, "delay must be between 1 and %u ms\n",
+				VDEVLAB_MAX_DELAY_MS);
 			goto out;
 		}
 
 		config.type = VDEVLAB_FAULT_DELAY;
-		config.delay_ms = (unsigned int)delay;
+		config.delay_ms = (unsigned int)value;
 	} else {
 		usage(argv[0]);
 		goto out;
@@ -121,6 +148,8 @@ int main(int argc, char **argv)
 	}
 
 	printf("fault=%s", fault_name(config.type));
+	if (config.type == VDEVLAB_FAULT_EIO)
+		printf(" remaining=%u", config.repeat);
 	if (config.type == VDEVLAB_FAULT_DELAY)
 		printf(" delay_ms=%u", config.delay_ms);
 	printf("\n");

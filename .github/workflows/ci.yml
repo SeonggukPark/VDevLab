@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes build-essential linux-headers-generic
+
+      - name: Check source formatting
+        run: git diff --check
+
+      - name: Check shell syntax
+        run: bash -n scripts/run-kernel-contract-test.sh
+
+      - name: Build kernel module and userspace binaries
+        run: |
+          kernel_dir="$(find /usr/src -maxdepth 1 -type d \
+            -name 'linux-headers-*-generic' | sort -V | tail -n 1)"
+          test -n "${kernel_dir}"
+          make KDIR="${kernel_dir}" all
+
+      - name: Verify build outputs
+        run: |
+          test -s kernel/vdevlab_core.ko
+          test -x tools/vdevlab-ctl
+          test -x tests/vdevlab-contract-test
+
+      - name: Verify clean target
+        run: |
+          kernel_dir="$(find /usr/src -maxdepth 1 -type d \
+            -name 'linux-headers-*-generic' | sort -V | tail -n 1)"
+          make KDIR="${kernel_dir}" clean

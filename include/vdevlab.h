@@ -5,6 +5,9 @@
 #include <linux/ioctl.h>
 #include <linux/types.h>
 
+#define VDEVLAB_MAX_DELAY_MS      10000U
+#define VDEVLAB_MAX_FAULT_REPEAT  1000000U
+
 enum vdevlab_fault_type {
 	VDEVLAB_FAULT_NONE = 0,
 	VDEVLAB_FAULT_EIO = 1,
@@ -14,6 +17,7 @@ enum vdevlab_fault_type {
 
 struct vdevlab_fault_config {
 	__u32 type;
+	__u32 repeat;
 	__u32 delay_ms;
 };
 
