@@ -91,13 +91,13 @@
 
 ### GitHub Gate
 
-- [ ] 관련 Issue에 설계와 완료 조건 갱신
-- [ ] 검증 가능한 단위로 commit
-- [ ] 원격 branch push
-- [ ] Issue #1과 연결된 Draft PR 생성
+- [x] 관련 Issue에 설계와 완료 조건 갱신
+- [x] 검증 가능한 단위로 commit
+- [x] 원격 branch push
+- [x] Issue #1과 연결된 Draft PR 생성
 - [ ] PR에 Ubuntu 환경과 테스트 로그 첨부
-- [ ] PR self-review checklist 완료
-- [ ] CI 또는 수동 Gate 결과 확인
+- [x] PR self-review checklist 완료
+- [x] CI 또는 수동 Gate 결과 확인
 - [ ] PR merge 및 Issue 상태 갱신
 
 ---
@@ -226,7 +226,7 @@
 - [ ] `scripts/unload.sh`
 - [ ] `scripts/demo.sh`
 - [ ] demo 실패 경로 cleanup trap
-- [ ] GitHub Actions kernel/userspace compile 통과
+- [x] GitHub Actions kernel/userspace compile 통과
 - [ ] GitHub Actions 사용자 공간 단위 테스트 통과
 - [ ] CI badge
 - [ ] `sudo ./scripts/demo.sh` 5회 연속 실행
@@ -359,3 +359,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 |---|---|---|---|---|
 | 2026-08-17 | 로컬 정적 검사 | Windows/PowerShell | shell syntax·Make dry-run·diff check 통과 | 로컬 브랜치, Ubuntu 실행 대기 |
 | 2026-08-17 | Ubuntu VM 접근 확인 | VMware/Ubuntu | VM·SSH 포트 확인, 기존 인증 정보 없어 runtime 미실행 | SSH 인증 준비 필요, Gate 미완료 |
+| 2026-08-18 | GitHub Gate | Ubuntu/GitHub Actions | kernel module·userspace compile 및 clean target 통과 | Issue #1, Draft PR #6, CI run 32042544936 |
