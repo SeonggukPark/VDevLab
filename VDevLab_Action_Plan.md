@@ -360,4 +360,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-17 | 로컬 정적 검사 | Windows/PowerShell | shell syntax·Make dry-run·diff check 통과 | 로컬 브랜치, Ubuntu 실행 대기 |
 | 2026-08-17 | Ubuntu VM 접근 확인 | VMware/Ubuntu | VM·SSH 포트 확인, 기존 인증 정보 없어 runtime 미실행 | SSH 인증 준비 필요, Gate 미완료 |
 | 2026-08-18 | GitHub Gate | Ubuntu/GitHub Actions | kernel module·userspace compile 및 clean target 통과 | Issue #1, Draft PR #6, CI run 32042544936 |
-| 2026-08-18 | Phase 2 소스 구현 | Windows/PowerShell | partial read·reconnect·full reset 구현, delay 허용 기준 문서화 | 로컬 정적 검사 통과, CI·runtime 대기 |
+| 2026-08-18 | Phase 2 소스 구현 | Windows·Ubuntu CI | partial read·reconnect·full reset 구현, delay 허용 기준 문서화 | Commit 80f913a, CI run 32088619189 통과, runtime 대기 |
