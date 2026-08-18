@@ -3,8 +3,8 @@
 > 마지막 갱신: 2026-08-18
 > 출품 마감: 2026-08-27
 > 현재 단계: Phase 5 — Scenario Runner 구현
-> 현재 브랜치: `issue-1/deterministic-fault-contracts`
-> 다음 실행: monotonic scheduler와 fake backend 단위 테스트 구현
+> 현재 브랜치: `issue-1/scenario-runner`
+> 다음 실행: ioctl device backend와 데이터 injection write 구현
 
 ## 체크 규칙
 
@@ -98,7 +98,7 @@
 - [x] PR에 Ubuntu 환경과 테스트 로그 첨부
 - [x] PR self-review checklist 완료
 - [x] CI 또는 수동 Gate 결과 확인
-- [ ] PR merge 및 Issue 상태 갱신
+- [x] PR merge 및 Issue 상태 갱신
 
 ---
 
@@ -118,7 +118,7 @@
 - [x] module load/unload 20회 반복
 - [x] kernel warning/oops/lockdep 0건
 - [x] fault model 문서와 실제 동작 일치 확인
-- [ ] Kernel fault 완성 PR merge
+- [x] Kernel fault 완성 PR merge
 
 ### Phase 2 Gate
 
@@ -139,7 +139,7 @@
 - [x] 모든 앱 로그에 monotonic timestamp 포함
 - [x] normal/non-blocking/poll/fault smoke test
 - [x] smoke test 10회 연속 실행
-- [ ] sample application·smoke test PR merge
+- [x] sample application·smoke test PR merge
 
 ### Phase 3 Gate
 
@@ -159,7 +159,7 @@
 - [x] 오류 위치를 포함한 `ScenarioError`
 - [x] 정상·오류 parser 단위 테스트
 - [x] `docs/scenario-format.md`
-- [ ] Parser PR merge
+- [x] Parser PR merge
 
 ### Phase 4 Gate
 
@@ -169,10 +169,10 @@
 
 ## Phase 5 — Scenario Runner
 
-- [ ] `time.monotonic()` 기반 scheduler
+- [x] `time.monotonic()` 기반 scheduler
 - [ ] ioctl device backend
 - [ ] 정상 데이터 injection write
-- [ ] EIO/delay/partial/disconnect/reconnect dispatch
+- [x] EIO/delay/partial/disconnect/reconnect dispatch
 - [ ] application process group 실행
 - [ ] stdout/stderr 동시 캡처
 - [ ] process exit code 수집
@@ -181,7 +181,7 @@
 - [ ] dispatch failure cleanup
 - [ ] timeout process 종료와 강제 종료 fallback
 - [ ] 모든 종료 경로에서 fault clear/reset
-- [ ] scheduler와 fake backend 단위 테스트
+- [x] scheduler와 fake backend 단위 테스트
 - [ ] Runner PR merge
 
 ### Phase 5 Gate
@@ -364,3 +364,5 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-18 | Phase 3 소스 구현 | Windows·Ubuntu CI | poll monitor·구조화 로그·retry/recovery·smoke runner 구현 | Commit 04d400e, CI run 32091074911 통과, runtime 대기 |
 | 2026-08-18 | Phase 4 Gate | Windows·Ubuntu CI | parser 테스트 36개·YAML 3종·CLI 검증 통과 | Commits 64652b7, 96460a9, CI run 32128583841 |
 | 2026-08-18 | Phase 1~3 Ubuntu VM Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | parser 36개, kernel contract, module lifecycle 20회, smoke 10회 통과; 신규 kernel warning 0건; module·device·process cleanup 확인 | [PR #6 검증 기록](https://github.com/SeonggukPark/VDevLab/pull/6#issuecomment-5327820341), VM `logs/kernel-contract-20260818T114131Z.log`, `logs/vtemp-smoke-20260818T114357Z-{1..10}.jsonl` |
+| 2026-08-18 | Phase 1~4 Merge Gate | GitHub | CI와 Ubuntu VM Gate 통과 후 기반 기능 병합, Issue #1에 다음 단계 기록 | PR #6, merge `a120ac2`, [Issue #1 갱신](https://github.com/SeonggukPark/VDevLab/issues/1#issuecomment-5327855287) |
+| 2026-08-18 | Phase 5 scheduler | Windows/Python 3 | absolute monotonic deadline, 지연 누적 방지, YAML 순서, fault dispatch, 실패 위치 보존 검증; 전체 45개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
