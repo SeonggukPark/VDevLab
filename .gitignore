@@ -1,0 +1,32 @@
+# Kernel module build outputs
+*.cmd
+*.ko
+*.mod
+*.mod.c
+*.o
+Module.symvers
+modules.order
+.tmp_versions/
+
+# Userspace build outputs
+/tools/vdevlab-ctl
+/tests/vdevlab-contract-test
+/examples/vtemp-monitor
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Runtime artifacts
+/logs/
+/reports/
+
+# Editor and OS files
+.DS_Store
+Thumbs.db

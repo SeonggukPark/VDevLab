@@ -1,0 +1,36 @@
+schema_version: 1
+
+device:
+  path: /dev/vdevlab0
+
+application:
+  command:
+    - ./examples/vtemp-monitor
+    - --poll-timeout-ms
+    - "250"
+  startup_timeout: 2s
+
+scenario:
+  name: three-eio-recovery
+  timeout: 5s
+  events:
+    - at: 0ms
+      action: reset
+    - at: 100ms
+      action: fault
+      type: eio
+      repeat: 3
+    - at: 200ms
+      action: write
+      data: "42\n"
+
+assertions:
+  - event: READ_RETRY
+    count: 3
+    within: 2s
+  - event: RECOVERY_SUCCESS
+    count: 1
+    within: 3s
+  - event: TEMPERATURE
+    count: 1
+    within: 3s
