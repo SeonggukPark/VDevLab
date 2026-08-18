@@ -129,14 +129,14 @@
 
 ## Phase 3 — Sample Application과 Kernel Smoke Test
 
-- [ ] `examples/vtemp_monitor.c` 구현
-- [ ] `/dev/vdevlab0` open 및 `poll()` 대기
-- [ ] 정상 온도 구조화 로그
-- [ ] 80도 이상 `THERMAL_WARNING`
-- [ ] EIO 최대 3회 retry
-- [ ] 정상화 시 `RECOVERY_SUCCESS`
-- [ ] disconnect 시 `DEVICE_DISCONNECTED`
-- [ ] 모든 앱 로그에 monotonic timestamp 포함
+- [x] `examples/vtemp_monitor.c` 구현
+- [x] `/dev/vdevlab0` open 및 `poll()` 대기
+- [x] 정상 온도 구조화 로그
+- [x] 80도 이상 `THERMAL_WARNING`
+- [x] EIO 최대 3회 retry
+- [x] 정상화 시 `RECOVERY_SUCCESS`
+- [x] disconnect 시 `DEVICE_DISCONNECTED`
+- [x] 모든 앱 로그에 monotonic timestamp 포함
 - [ ] normal/non-blocking/poll/fault smoke test
 - [ ] smoke test 10회 연속 실행
 - [ ] sample application·smoke test PR merge
@@ -361,3 +361,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-17 | Ubuntu VM 접근 확인 | VMware/Ubuntu | VM·SSH 포트 확인, 기존 인증 정보 없어 runtime 미실행 | SSH 인증 준비 필요, Gate 미완료 |
 | 2026-08-18 | GitHub Gate | Ubuntu/GitHub Actions | kernel module·userspace compile 및 clean target 통과 | Issue #1, Draft PR #6, CI run 32042544936 |
 | 2026-08-18 | Phase 2 소스 구현 | Windows·Ubuntu CI | partial read·reconnect·full reset 구현, delay 허용 기준 문서화 | Commit 80f913a, CI run 32088619189 통과, runtime 대기 |
+| 2026-08-18 | Phase 3 소스 구현 | Windows·Ubuntu CI | poll monitor·구조화 로그·retry/recovery·smoke runner 구현 | Commit 04d400e, CI run 32091074911 통과, runtime 대기 |
