@@ -16,11 +16,30 @@ normal fault state.
 | `EIO` | Returns `-EIO` for the configured count | Normal | `POLLERR` while pending |
 | `DELAY` | Delays the read once per system call | Normal | FIFO readiness |
 | `DISCONNECT` | Returns `-ENODEV` | Returns `-ENODEV` | `POLLERR | POLLHUP` |
+| `PARTIAL_READ` | Returns at most the configured byte count | Normal | FIFO readiness |
 
 Data faults apply only to reads. This separation is intentional: the scenario
 runner writes test data into the device, and those writes must not consume an
 error intended for the application under test. Disconnect is device-wide and
 therefore affects both directions.
+
+## Delay
+
+A delay configuration contains a positive millisecond value from 1 through
+`VDEVLAB_MAX_DELAY_MS`. The delay is applied at most once during each `read()`
+system call, including a call that sleeps waiting for data and later retries its
+internal read loop. Runtime tests use `CLOCK_MONOTONIC` and accept a measured
+duration from 80% of the configured delay through 1000 milliseconds for a
+100-millisecond request. The lower allowance accounts for timer granularity;
+the upper bound detects accidental repeated or unbounded delay.
+
+## Partial read
+
+A partial-read configuration contains a positive byte limit from 1 through
+`VDEVLAB_MAX_PARTIAL_READ`. A successful read returns no more than this limit,
+the caller's buffer size, or the available FIFO data, whichever is smallest.
+The fault remains active until it is cleared or replaced. It never discards the
+unreturned portion of the FIFO data.
 
 ## Counted EIO
 
@@ -67,8 +86,12 @@ before asserting subsequent I/O results.
 ## Reset behavior
 
 `VDEVLAB_IOC_CLEAR_FAULT` clears the active fault but does not discard FIFO
-data. End-to-end scenario cleanup must either drain the FIFO or reload the
-module until a separate full reset operation is added.
+data. Clearing a disconnect is the reconnect operation: existing file
+descriptors resume normal I/O and queued FIFO data is preserved.
+
+`VDEVLAB_IOC_RESET` atomically restores the observable device state for a new
+scenario by clearing the active fault and discarding all queued FIFO data. The
+implementation wakes both read and write wait queues after either operation.
 
 ## Required verification
 
@@ -87,7 +110,12 @@ warning, oops, panic, and lockdep patterns.
 - Concurrent readers cannot consume the same EIO occurrence.
 - Injection writes do not reduce the EIO count.
 - A blocked reader wakes when EIO or disconnect is activated.
+- A blocked writer wakes when disconnect is activated.
 - Poll wakes and reports the documented error bits.
 - The read following the last EIO returns to normal FIFO behavior.
+- Delay is measured with a monotonic clock and is applied once per read call.
+- Partial reads preserve the unread FIFO remainder.
+- Reconnect preserves FIFO data; full reset discards it.
 - Invalid configurations leave the previous fault unchanged.
+- Unsupported ioctl commands return `-ENOTTY`.
 - Kernel logs contain no warning, oops, or lockdep report.

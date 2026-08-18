@@ -106,13 +106,13 @@
 
 - [ ] delay가 read당 한 번만 적용되는지 검증
 - [ ] monotonic clock으로 실제 delay 측정
-- [ ] delay 허용 오차 기준 확정
-- [ ] partial-read UAPI 추가
-- [ ] partial-read 반환 크기와 경계 처리
+- [x] delay 허용 오차 기준 확정
+- [x] partial-read UAPI 추가
+- [x] partial-read 반환 크기와 경계 처리
 - [ ] disconnect 중 read/write의 `ENODEV` 검증
 - [ ] disconnect 중 blocked read/write wake-up 검증
-- [ ] reconnect 동작 정의와 구현
-- [ ] fault 상태와 FIFO를 함께 초기화하는 full reset
+- [x] reconnect 동작 정의와 구현
+- [x] fault 상태와 FIFO를 함께 초기화하는 full reset
 - [ ] 지원하지 않는 ioctl의 `ENOTTY` 검증
 - [ ] fault config 범위 오류의 `EINVAL` 검증
 - [ ] module load/unload 20회 반복
@@ -360,3 +360,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-17 | 로컬 정적 검사 | Windows/PowerShell | shell syntax·Make dry-run·diff check 통과 | 로컬 브랜치, Ubuntu 실행 대기 |
 | 2026-08-17 | Ubuntu VM 접근 확인 | VMware/Ubuntu | VM·SSH 포트 확인, 기존 인증 정보 없어 runtime 미실행 | SSH 인증 준비 필요, Gate 미완료 |
 | 2026-08-18 | GitHub Gate | Ubuntu/GitHub Actions | kernel module·userspace compile 및 clean target 통과 | Issue #1, Draft PR #6, CI run 32042544936 |
+| 2026-08-18 | Phase 2 소스 구현 | Windows/PowerShell | partial read·reconnect·full reset 구현, delay 허용 기준 문서화 | 로컬 정적 검사 통과, CI·runtime 대기 |

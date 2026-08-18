@@ -17,11 +17,14 @@ static void usage(const char *prog)
 		"Usage:\n"
 		"  %s get\n"
 		"  %s clear\n"
+		"  %s reset\n"
+		"  %s reconnect\n"
 		"  %s set none\n"
 		"  %s set eio <count>\n"
 		"  %s set delay <milliseconds>\n"
+		"  %s set partial-read <bytes>\n"
 		"  %s set disconnect\n",
-		prog, prog, prog, prog, prog, prog);
+		prog, prog, prog, prog, prog, prog, prog, prog, prog);
 }
 
 static const char *fault_name(unsigned int type)
@@ -35,6 +38,8 @@ static const char *fault_name(unsigned int type)
 		return "delay";
 	case VDEVLAB_FAULT_DISCONNECT:
 		return "disconnect";
+	case VDEVLAB_FAULT_PARTIAL_READ:
+		return "partial-read";
 	default:
 		return "unknown";
 	}
@@ -70,18 +75,40 @@ int main(int argc, char **argv)
 			printf(" remaining=%u", config.repeat);
 		if (config.type == VDEVLAB_FAULT_DELAY)
 			printf(" delay_ms=%u", config.delay_ms);
+		if (config.type == VDEVLAB_FAULT_PARTIAL_READ)
+			printf(" max_bytes=%u", config.partial_read_bytes);
 		putchar('\n');
 		ret = 0;
 		goto out;
 	}
 
-	if (!strcmp(argv[1], "clear")) {
+	if (!strcmp(argv[1], "clear") || !strcmp(argv[1], "reconnect")) {
+		if (argc != 2) {
+			usage(argv[0]);
+			goto out;
+		}
 		if (ioctl(fd, VDEVLAB_IOC_CLEAR_FAULT) < 0) {
 			perror("ioctl(CLEAR_FAULT)");
 			goto out;
 		}
 
-		printf("fault cleared\n");
+		printf(!strcmp(argv[1], "reconnect") ?
+		       "device reconnected\n" : "fault cleared\n");
+		ret = 0;
+		goto out;
+	}
+
+	if (!strcmp(argv[1], "reset")) {
+		if (argc != 2) {
+			usage(argv[0]);
+			goto out;
+		}
+		if (ioctl(fd, VDEVLAB_IOC_RESET) < 0) {
+			perror("ioctl(RESET)");
+			goto out;
+		}
+
+		printf("fault and FIFO reset\n");
 		ret = 0;
 		goto out;
 	}
@@ -137,6 +164,23 @@ int main(int argc, char **argv)
 
 		config.type = VDEVLAB_FAULT_DELAY;
 		config.delay_ms = (unsigned int)value;
+	} else if (!strcmp(argv[2], "partial-read")) {
+		if (argc != 4) {
+			usage(argv[0]);
+			goto out;
+		}
+
+		errno = 0;
+		value = strtol(argv[3], &end, 10);
+		if (errno || *end != '\0' || value <= 0 ||
+		    value > VDEVLAB_MAX_PARTIAL_READ) {
+			fprintf(stderr, "partial read must be between 1 and %u bytes\n",
+				VDEVLAB_MAX_PARTIAL_READ);
+			goto out;
+		}
+
+		config.type = VDEVLAB_FAULT_PARTIAL_READ;
+		config.partial_read_bytes = (unsigned int)value;
 	} else {
 		usage(argv[0]);
 		goto out;
@@ -152,6 +196,8 @@ int main(int argc, char **argv)
 		printf(" remaining=%u", config.repeat);
 	if (config.type == VDEVLAB_FAULT_DELAY)
 		printf(" delay_ms=%u", config.delay_ms);
+	if (config.type == VDEVLAB_FAULT_PARTIAL_READ)
+		printf(" max_bytes=%u", config.partial_read_bytes);
 	printf("\n");
 	ret = 0;
 

@@ -43,6 +43,7 @@ static void vdevlab_clear_fault_locked(void)
 	vdevlab_fault.type = VDEVLAB_FAULT_NONE;
 	vdevlab_fault.repeat = 0;
 	vdevlab_fault.delay_ms = 0;
+	vdevlab_fault.partial_read_bytes = 0;
 }
 
 static bool vdevlab_fault_interrupts_read(void)
@@ -73,7 +74,8 @@ static int vdevlab_release(struct inode *inode, struct file *file)
  * free prevents a scenario runner from consuming an EIO intended for the
  * application under test.  Disconnect remains a device-wide state.
  */
-static int vdevlab_apply_read_fault(bool *delay_applied)
+static int vdevlab_apply_read_fault(bool *delay_applied,
+				    unsigned int *partial_read_bytes)
 {
 	unsigned int delay_ms = 0;
 	int ret = 0;
@@ -99,6 +101,9 @@ static int vdevlab_apply_read_fault(bool *delay_applied)
 			*delay_applied = true;
 		}
 		break;
+	case VDEVLAB_FAULT_PARTIAL_READ:
+		*partial_read_bytes = vdevlab_fault.partial_read_bytes;
+		break;
 	case VDEVLAB_FAULT_DISCONNECT:
 		ret = -ENODEV;
 		break;
@@ -118,6 +123,7 @@ static ssize_t vdevlab_read(struct file *file, char __user *buf,
 			   size_t count, loff_t *ppos)
 {
 	unsigned int copied = 0;
+	unsigned int partial_read_bytes = 0;
 	unsigned int to_copy;
 	bool delay_applied = false;
 	int ret;
@@ -126,7 +132,8 @@ static ssize_t vdevlab_read(struct file *file, char __user *buf,
 		return 0;
 
 	for (;;) {
-		ret = vdevlab_apply_read_fault(&delay_applied);
+		ret = vdevlab_apply_read_fault(&delay_applied,
+					       &partial_read_bytes);
 		if (ret)
 			return ret;
 
@@ -150,6 +157,8 @@ static ssize_t vdevlab_read(struct file *file, char __user *buf,
 	}
 
 	to_copy = min_t(size_t, count, kfifo_len(&vdevlab_fifo));
+	if (partial_read_bytes)
+		to_copy = min(to_copy, partial_read_bytes);
 	ret = kfifo_to_user(&vdevlab_fifo, buf, to_copy, &copied);
 	mutex_unlock(&vdevlab_fifo_lock);
 
@@ -253,26 +262,37 @@ static long vdevlab_ioctl(struct file *file, unsigned int cmd,
 		if (copy_from_user(&config, (void __user *)arg, sizeof(config)))
 			return -EFAULT;
 
-		if (config.type > VDEVLAB_FAULT_DISCONNECT)
+		if (config.type > VDEVLAB_FAULT_PARTIAL_READ)
 			return -EINVAL;
 
 		switch (config.type) {
 		case VDEVLAB_FAULT_NONE:
 			config.repeat = 0;
 			config.delay_ms = 0;
+			config.partial_read_bytes = 0;
 			break;
 		case VDEVLAB_FAULT_EIO:
 			if (!config.repeat ||
 			    config.repeat > VDEVLAB_MAX_FAULT_REPEAT)
 				return -EINVAL;
 			config.delay_ms = 0;
+			config.partial_read_bytes = 0;
 			break;
 		case VDEVLAB_FAULT_DELAY:
 			if (!config.delay_ms || config.delay_ms > VDEVLAB_MAX_DELAY_MS)
 				return -EINVAL;
 			config.repeat = 0;
+			config.partial_read_bytes = 0;
 			break;
 		case VDEVLAB_FAULT_DISCONNECT:
+			config.repeat = 0;
+			config.delay_ms = 0;
+			config.partial_read_bytes = 0;
+			break;
+		case VDEVLAB_FAULT_PARTIAL_READ:
+			if (!config.partial_read_bytes ||
+			    config.partial_read_bytes > VDEVLAB_MAX_PARTIAL_READ)
+				return -EINVAL;
 			config.repeat = 0;
 			config.delay_ms = 0;
 			break;
@@ -300,6 +320,18 @@ static long vdevlab_ioctl(struct file *file, unsigned int cmd,
 	case VDEVLAB_IOC_CLEAR_FAULT:
 		mutex_lock(&vdevlab_fault_lock);
 		vdevlab_clear_fault_locked();
+		mutex_unlock(&vdevlab_fault_lock);
+
+		wake_up_interruptible(&vdevlab_readq);
+		wake_up_interruptible(&vdevlab_writeq);
+		return 0;
+
+	case VDEVLAB_IOC_RESET:
+		mutex_lock(&vdevlab_fault_lock);
+		mutex_lock(&vdevlab_fifo_lock);
+		vdevlab_clear_fault_locked();
+		kfifo_reset(&vdevlab_fifo);
+		mutex_unlock(&vdevlab_fifo_lock);
 		mutex_unlock(&vdevlab_fault_lock);
 
 		wake_up_interruptible(&vdevlab_readq);
