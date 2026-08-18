@@ -30,7 +30,9 @@ jobs:
         run: git diff --check
 
       - name: Check shell syntax
-        run: bash -n scripts/run-kernel-contract-test.sh
+        run: |
+          bash -n scripts/run-kernel-contract-test.sh
+          bash -n scripts/run-vtemp-smoke-test.sh
 
       - name: Build kernel module and userspace binaries
         run: |
@@ -44,6 +46,7 @@ jobs:
           test -s kernel/vdevlab_core.ko
           test -x tools/vdevlab-ctl
           test -x tests/vdevlab-contract-test
+          test -x examples/vtemp-monitor
 
       - name: Verify clean target
         run: |

@@ -11,6 +11,7 @@ modules.order
 # Userspace build outputs
 /tools/vdevlab-ctl
 /tests/vdevlab-contract-test
+/examples/vtemp-monitor
 
 # Python
 __pycache__/
