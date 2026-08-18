@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-18
 > 출품 마감: 2026-08-27
-> 현재 단계: Phase 1 — Ubuntu VM deterministic fault contract 검증
+> 현재 단계: Phase 5 — Scenario Runner 구현
 > 현재 브랜치: `issue-1/deterministic-fault-contracts`
-> 다음 실행: `make contract-test`
+> 다음 실행: monotonic scheduler와 fake backend 단위 테스트 구현
 
 ## 체크 규칙
 
@@ -76,18 +76,18 @@
 ### Ubuntu VM Gate
 
 - [x] 실행 중인 VMware Ubuntu와 SSH 포트 확인
-- [ ] Ubuntu VM snapshot 또는 깨끗한 검증 환경 준비
-- [ ] `make contract-test`로 kernel module 빌드
-- [ ] control utility와 contract test 빌드
-- [ ] expected EIO 3회와 observed EIO 3회 일치
-- [ ] injection write의 EIO count 소비 0회
-- [ ] 네 번째 read에서 queued payload 정상 수신
-- [ ] blocked read가 EIO로 즉시 wake-up
-- [ ] blocked poll이 `POLLERR`로 즉시 wake-up
-- [ ] invalid repeat 0이 `EINVAL`로 거부됨
-- [ ] module unload 후 `/dev/vdevlab0` 제거
-- [ ] kernel warning/oops/lockdep 0건
-- [ ] 실제 테스트 로그 저장
+- [x] Ubuntu VM snapshot 또는 깨끗한 검증 환경 준비
+- [x] `make contract-test`로 kernel module 빌드
+- [x] control utility와 contract test 빌드
+- [x] expected EIO 3회와 observed EIO 3회 일치
+- [x] injection write의 EIO count 소비 0회
+- [x] 네 번째 read에서 queued payload 정상 수신
+- [x] blocked read가 EIO로 즉시 wake-up
+- [x] blocked poll이 `POLLERR`로 즉시 wake-up
+- [x] invalid repeat 0이 `EINVAL`로 거부됨
+- [x] module unload 후 `/dev/vdevlab0` 제거
+- [x] kernel warning/oops/lockdep 0건
+- [x] 실제 테스트 로그 저장
 
 ### GitHub Gate
 
@@ -95,7 +95,7 @@
 - [x] 검증 가능한 단위로 commit
 - [x] 원격 branch push
 - [x] Issue #1과 연결된 Draft PR 생성
-- [ ] PR에 Ubuntu 환경과 테스트 로그 첨부
+- [x] PR에 Ubuntu 환경과 테스트 로그 첨부
 - [x] PR self-review checklist 완료
 - [x] CI 또는 수동 Gate 결과 확인
 - [ ] PR merge 및 Issue 상태 갱신
@@ -104,26 +104,26 @@
 
 ## Phase 2 — Kernel Fault 기능 완성
 
-- [ ] delay가 read당 한 번만 적용되는지 검증
-- [ ] monotonic clock으로 실제 delay 측정
+- [x] delay가 read당 한 번만 적용되는지 검증
+- [x] monotonic clock으로 실제 delay 측정
 - [x] delay 허용 오차 기준 확정
 - [x] partial-read UAPI 추가
 - [x] partial-read 반환 크기와 경계 처리
-- [ ] disconnect 중 read/write의 `ENODEV` 검증
-- [ ] disconnect 중 blocked read/write wake-up 검증
+- [x] disconnect 중 read/write의 `ENODEV` 검증
+- [x] disconnect 중 blocked read/write wake-up 검증
 - [x] reconnect 동작 정의와 구현
 - [x] fault 상태와 FIFO를 함께 초기화하는 full reset
-- [ ] 지원하지 않는 ioctl의 `ENOTTY` 검증
-- [ ] fault config 범위 오류의 `EINVAL` 검증
-- [ ] module load/unload 20회 반복
-- [ ] kernel warning/oops/lockdep 0건
-- [ ] fault model 문서와 실제 동작 일치 확인
+- [x] 지원하지 않는 ioctl의 `ENOTTY` 검증
+- [x] fault config 범위 오류의 `EINVAL` 검증
+- [x] module load/unload 20회 반복
+- [x] kernel warning/oops/lockdep 0건
+- [x] fault model 문서와 실제 동작 일치 확인
 - [ ] Kernel fault 완성 PR merge
 
 ### Phase 2 Gate
 
-- [ ] EIO·delay·partial read·disconnect가 독립적으로 설정·조회·해제됨
-- [ ] 두 번 연속 테스트에서 fault/FIFO 상태가 누적되지 않음
+- [x] EIO·delay·partial read·disconnect가 독립적으로 설정·조회·해제됨
+- [x] 두 번 연속 테스트에서 fault/FIFO 상태가 누적되지 않음
 
 ---
 
@@ -137,13 +137,13 @@
 - [x] 정상화 시 `RECOVERY_SUCCESS`
 - [x] disconnect 시 `DEVICE_DISCONNECTED`
 - [x] 모든 앱 로그에 monotonic timestamp 포함
-- [ ] normal/non-blocking/poll/fault smoke test
-- [ ] smoke test 10회 연속 실행
+- [x] normal/non-blocking/poll/fault smoke test
+- [x] smoke test 10회 연속 실행
 - [ ] sample application·smoke test PR merge
 
 ### Phase 3 Gate
 
-- [ ] EIO 3회 → retry 3회 → 정상 복구 로그가 실제 kernel device에서 생성됨
+- [x] EIO 3회 → retry 3회 → 정상 복구 로그가 실제 kernel device에서 생성됨
 
 ---
 
@@ -363,3 +363,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-18 | Phase 2 소스 구현 | Windows·Ubuntu CI | partial read·reconnect·full reset 구현, delay 허용 기준 문서화 | Commit 80f913a, CI run 32088619189 통과, runtime 대기 |
 | 2026-08-18 | Phase 3 소스 구현 | Windows·Ubuntu CI | poll monitor·구조화 로그·retry/recovery·smoke runner 구현 | Commit 04d400e, CI run 32091074911 통과, runtime 대기 |
 | 2026-08-18 | Phase 4 Gate | Windows·Ubuntu CI | parser 테스트 36개·YAML 3종·CLI 검증 통과 | Commits 64652b7, 96460a9, CI run 32128583841 |
+| 2026-08-18 | Phase 1~3 Ubuntu VM Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | parser 36개, kernel contract, module lifecycle 20회, smoke 10회 통과; 신규 kernel warning 0건; module·device·process cleanup 확인 | [PR #6 검증 기록](https://github.com/SeonggukPark/VDevLab/pull/6#issuecomment-5327820341), VM `logs/kernel-contract-20260818T114131Z.log`, `logs/vtemp-smoke-20260818T114357Z-{1..10}.jsonl` |
