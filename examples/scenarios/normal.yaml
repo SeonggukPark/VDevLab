@@ -1,0 +1,32 @@
+schema_version: 1
+
+device:
+  path: /dev/vdevlab0
+
+application:
+  command:
+    - ./examples/vtemp-monitor
+    - --poll-timeout-ms
+    - "250"
+  startup_timeout: 2s
+
+scenario:
+  name: normal-temperature-flow
+  timeout: 5s
+  events:
+    - at: 0ms
+      action: reset
+    - at: 100ms
+      action: write
+      data: "25\n"
+    - at: 200ms
+      action: write
+      data: "42\n"
+
+assertions:
+  - event: MONITOR_STARTED
+    count: 1
+    within: 2s
+  - event: TEMPERATURE
+    count: 2
+    within: 3s

@@ -1,0 +1,32 @@
+schema_version: 1
+
+device:
+  path: /dev/vdevlab0
+
+application:
+  command:
+    - ./examples/vtemp-monitor
+    - --poll-timeout-ms
+    - "250"
+  startup_timeout: 2s
+
+scenario:
+  name: device-disconnect
+  timeout: 5s
+  events:
+    - at: 0ms
+      action: reset
+    - at: 100ms
+      action: write
+      data: "25\n"
+    - at: 200ms
+      action: fault
+      type: disconnect
+
+assertions:
+  - event: TEMPERATURE
+    count: 1
+    within: 2s
+  - event: DEVICE_DISCONNECTED
+    count: 1
+    within: 3s
