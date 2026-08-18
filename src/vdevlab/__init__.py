@@ -5,6 +5,7 @@ from .runner import (
     DispatchRecord,
     EventDispatchError,
     FaultConfiguration,
+    LinuxDeviceBackend,
     RunnerError,
     ScenarioScheduler,
 )
@@ -17,6 +18,7 @@ __all__ = [
     "DispatchRecord",
     "EventDispatchError",
     "FaultConfiguration",
+    "LinuxDeviceBackend",
     "RunnerError",
     "load_scenario",
 ]

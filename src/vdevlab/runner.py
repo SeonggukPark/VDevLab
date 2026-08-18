@@ -4,8 +4,49 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+import errno
+import os
+import struct
 import time
 from typing import Any, Protocol
+
+try:
+    from fcntl import ioctl as _system_ioctl
+except ImportError:
+    _system_ioctl = None
+
+
+_FAULT_TYPES = {
+    "eio": 1,
+    "delay": 2,
+    "disconnect": 3,
+    "partial-read": 4,
+}
+_FAULT_STRUCT = struct.Struct("=IIII")
+
+_IOC_NRBITS = 8
+_IOC_TYPEBITS = 8
+_IOC_SIZEBITS = 14
+_IOC_NRSHIFT = 0
+_IOC_TYPESHIFT = _IOC_NRSHIFT + _IOC_NRBITS
+_IOC_SIZESHIFT = _IOC_TYPESHIFT + _IOC_TYPEBITS
+_IOC_DIRSHIFT = _IOC_SIZESHIFT + _IOC_SIZEBITS
+_IOC_NONE = 0
+_IOC_WRITE = 1
+
+
+def _ioctl_number(direction: int, number: int, size: int = 0) -> int:
+    return (
+        (direction << _IOC_DIRSHIFT)
+        | (ord("V") << _IOC_TYPESHIFT)
+        | (number << _IOC_NRSHIFT)
+        | (size << _IOC_SIZESHIFT)
+    )
+
+
+_VDEVLAB_IOC_SET_FAULT = _ioctl_number(_IOC_WRITE, 0x01, _FAULT_STRUCT.size)
+_VDEVLAB_IOC_CLEAR_FAULT = _ioctl_number(_IOC_NONE, 0x03)
+_VDEVLAB_IOC_RESET = _ioctl_number(_IOC_NONE, 0x04)
 
 
 @dataclass(frozen=True)
@@ -45,6 +86,67 @@ class EventDispatchError(RunnerError):
         self.action = action
         self.cause = cause
         super().__init__(f"event {index} ({action}) failed: {cause}")
+
+
+class LinuxDeviceBackend:
+    def __init__(self, device_path: str) -> None:
+        if _system_ioctl is None:
+            raise RunnerError("Linux ioctl support is unavailable on this platform")
+        self.device_path = device_path
+        flags = os.O_RDWR | getattr(os, "O_CLOEXEC", 0)
+        self._fd: int | None = os.open(device_path, flags)
+
+    def __enter__(self) -> LinuxDeviceBackend:
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        self.close()
+
+    def close(self) -> None:
+        if self._fd is not None:
+            os.close(self._fd)
+            self._fd = None
+
+    def reset(self) -> None:
+        assert _system_ioctl is not None
+        _system_ioctl(self._fileno(), _VDEVLAB_IOC_RESET)
+
+    def clear_fault(self) -> None:
+        assert _system_ioctl is not None
+        _system_ioctl(self._fileno(), _VDEVLAB_IOC_CLEAR_FAULT)
+
+    def write(self, data: bytes) -> None:
+        remaining = memoryview(data)
+        while remaining:
+            try:
+                written = os.write(self._fileno(), remaining)
+            except InterruptedError:
+                continue
+            if written == 0:
+                raise OSError(errno.EIO, "device write made no progress")
+            remaining = remaining[written:]
+
+    def set_fault(self, configuration: FaultConfiguration) -> None:
+        try:
+            fault_type = _FAULT_TYPES[configuration.fault_type]
+        except KeyError as error:
+            raise RunnerError(
+                f"unsupported fault type: {configuration.fault_type}"
+            ) from error
+
+        payload = _FAULT_STRUCT.pack(
+            fault_type,
+            configuration.repeat,
+            configuration.delay_ms,
+            configuration.partial_read_bytes,
+        )
+        assert _system_ioctl is not None
+        _system_ioctl(self._fileno(), _VDEVLAB_IOC_SET_FAULT, payload)
+
+    def _fileno(self) -> int:
+        if self._fd is None:
+            raise RunnerError("device backend is closed")
+        return self._fd
 
 
 class ScenarioScheduler:

@@ -4,7 +4,7 @@
 > 출품 마감: 2026-08-27
 > 현재 단계: Phase 5 — Scenario Runner 구현
 > 현재 브랜치: `issue-1/scenario-runner`
-> 다음 실행: ioctl device backend와 데이터 injection write 구현
+> 다음 실행: application process group과 stdout/stderr capture 구현
 
 ## 체크 규칙
 
@@ -170,8 +170,8 @@
 ## Phase 5 — Scenario Runner
 
 - [x] `time.monotonic()` 기반 scheduler
-- [ ] ioctl device backend
-- [ ] 정상 데이터 injection write
+- [x] ioctl device backend
+- [x] 정상 데이터 injection write
 - [x] EIO/delay/partial/disconnect/reconnect dispatch
 - [ ] application process group 실행
 - [ ] stdout/stderr 동시 캡처
@@ -365,4 +365,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-18 | Phase 4 Gate | Windows·Ubuntu CI | parser 테스트 36개·YAML 3종·CLI 검증 통과 | Commits 64652b7, 96460a9, CI run 32128583841 |
 | 2026-08-18 | Phase 1~3 Ubuntu VM Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | parser 36개, kernel contract, module lifecycle 20회, smoke 10회 통과; 신규 kernel warning 0건; module·device·process cleanup 확인 | [PR #6 검증 기록](https://github.com/SeonggukPark/VDevLab/pull/6#issuecomment-5327820341), VM `logs/kernel-contract-20260818T114131Z.log`, `logs/vtemp-smoke-20260818T114357Z-{1..10}.jsonl` |
 | 2026-08-18 | Phase 1~4 Merge Gate | GitHub | CI와 Ubuntu VM Gate 통과 후 기반 기능 병합, Issue #1에 다음 단계 기록 | PR #6, merge `a120ac2`, [Issue #1 갱신](https://github.com/SeonggukPark/VDevLab/issues/1#issuecomment-5327855287) |
-| 2026-08-18 | Phase 5 scheduler | Windows/Python 3 | absolute monotonic deadline, 지연 누적 방지, YAML 순서, fault dispatch, 실패 위치 보존 검증; 전체 45개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
+| 2026-08-18 | Phase 5 scheduler/backend | Windows/Python 3 | absolute monotonic deadline, 지연 누적 방지, YAML 순서, fault dispatch, ioctl 구조체, 부분 write·EINTR·close 검증; 전체 54개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |

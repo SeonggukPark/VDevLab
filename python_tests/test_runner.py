@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import errno
 from pathlib import Path
+import struct
 
 import pytest
 
 from vdevlab.runner import (
     EventDispatchError,
     FaultConfiguration,
+    LinuxDeviceBackend,
     RunnerError,
     ScenarioScheduler,
 )
@@ -195,3 +198,125 @@ def test_scheduler_rejects_invalid_normalized_deadlines(event: dict[str, object]
 
     with pytest.raises(RunnerError, match="invalid at_ms"):
         ScenarioScheduler(clock.monotonic, clock.sleep).run((event,), FakeBackend())
+
+
+def test_linux_backend_opens_and_closes_device(monkeypatch: pytest.MonkeyPatch) -> None:
+    opened: list[tuple[str, int]] = []
+    closed: list[int] = []
+
+    monkeypatch.setattr(
+        "vdevlab.runner.os.open",
+        lambda path, flags: opened.append((path, flags)) or 17,
+    )
+    monkeypatch.setattr("vdevlab.runner.os.close", closed.append)
+    monkeypatch.setattr("vdevlab.runner._system_ioctl", lambda *args: 0)
+
+    with LinuxDeviceBackend("/dev/vdevlab-test") as backend:
+        assert backend.device_path == "/dev/vdevlab-test"
+
+    backend.close()
+    assert opened[0][0] == "/dev/vdevlab-test"
+    assert opened[0][1] != 0
+    assert closed == [17]
+
+
+@pytest.mark.parametrize(
+    ("configuration", "expected"),
+    (
+        (FaultConfiguration("eio", repeat=3), (1, 3, 0, 0)),
+        (FaultConfiguration("delay", delay_ms=125), (2, 0, 125, 0)),
+        (FaultConfiguration("disconnect"), (3, 0, 0, 0)),
+        (FaultConfiguration("partial-read", partial_read_bytes=2), (4, 0, 0, 2)),
+    ),
+)
+def test_linux_backend_packs_fault_ioctl(
+    monkeypatch: pytest.MonkeyPatch,
+    configuration: FaultConfiguration,
+    expected: tuple[int, int, int, int],
+) -> None:
+    calls: list[tuple[int, int, bytes]] = []
+    monkeypatch.setattr("vdevlab.runner.os.open", lambda path, flags: 23)
+    monkeypatch.setattr("vdevlab.runner.os.close", lambda fd: None)
+    monkeypatch.setattr(
+        "vdevlab.runner._system_ioctl",
+        lambda fd, request, payload=b"": calls.append((fd, request, payload)) or 0,
+    )
+
+    with LinuxDeviceBackend("/dev/vdevlab0") as backend:
+        backend.set_fault(configuration)
+
+    assert len(calls) == 1
+    assert calls[0][0] == 23
+    assert calls[0][1] == 0x40105601
+    assert struct.unpack("=IIII", calls[0][2]) == expected
+
+
+def test_linux_backend_dispatches_clear_and_reset_ioctl(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    requests: list[int] = []
+    monkeypatch.setattr("vdevlab.runner.os.open", lambda path, flags: 29)
+    monkeypatch.setattr("vdevlab.runner.os.close", lambda fd: None)
+    monkeypatch.setattr(
+        "vdevlab.runner._system_ioctl",
+        lambda fd, request: requests.append(request) or 0,
+    )
+
+    with LinuxDeviceBackend("/dev/vdevlab0") as backend:
+        backend.clear_fault()
+        backend.reset()
+
+    assert requests == [0x5603, 0x5604]
+
+
+def test_linux_backend_retries_interrupted_and_partial_writes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    chunks: list[bytes] = []
+    results: list[BaseException | int] = [InterruptedError(), 2, 3]
+
+    def fake_write(fd: int, data: memoryview) -> int:
+        chunks.append(bytes(data))
+        result = results.pop(0)
+        if isinstance(result, BaseException):
+            raise result
+        return result
+
+    monkeypatch.setattr("vdevlab.runner.os.open", lambda path, flags: 31)
+    monkeypatch.setattr("vdevlab.runner.os.close", lambda fd: None)
+    monkeypatch.setattr("vdevlab.runner.os.write", fake_write)
+    monkeypatch.setattr("vdevlab.runner._system_ioctl", lambda *args: 0)
+
+    with LinuxDeviceBackend("/dev/vdevlab0") as backend:
+        backend.write(b"hello")
+
+    assert chunks == [b"hello", b"hello", b"llo"]
+    assert results == []
+
+
+def test_linux_backend_rejects_zero_progress_write(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("vdevlab.runner.os.open", lambda path, flags: 37)
+    monkeypatch.setattr("vdevlab.runner.os.close", lambda fd: None)
+    monkeypatch.setattr("vdevlab.runner.os.write", lambda fd, data: 0)
+    monkeypatch.setattr("vdevlab.runner._system_ioctl", lambda *args: 0)
+
+    with LinuxDeviceBackend("/dev/vdevlab0") as backend:
+        with pytest.raises(OSError) as captured:
+            backend.write(b"data")
+
+    assert captured.value.errno == errno.EIO
+
+
+def test_linux_backend_rejects_operations_after_close(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("vdevlab.runner.os.open", lambda path, flags: 41)
+    monkeypatch.setattr("vdevlab.runner.os.close", lambda fd: None)
+    monkeypatch.setattr("vdevlab.runner._system_ioctl", lambda *args: 0)
+    backend = LinuxDeviceBackend("/dev/vdevlab0")
+    backend.close()
+
+    with pytest.raises(RunnerError, match="closed"):
+        backend.reset()
