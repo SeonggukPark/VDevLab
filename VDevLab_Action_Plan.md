@@ -149,21 +149,21 @@
 
 ## Phase 4 — YAML Schema와 Parser
 
-- [ ] `pyproject.toml`과 `vdevlab` CLI entry point
-- [ ] `schema_version` 필드 정의
-- [ ] `ms`, `s` duration parser
-- [ ] device/application/scenario/assertions 필수 필드 검증
-- [ ] 이벤트별 허용 필드와 자료형 검증
-- [ ] fault별 인자 범위 검증
-- [ ] 시간 역전과 빈 scenario 거부
-- [ ] 오류 위치를 포함한 `ScenarioError`
-- [ ] 정상·오류 parser 단위 테스트
-- [ ] `docs/scenario-format.md`
+- [x] `pyproject.toml`과 `vdevlab` CLI entry point
+- [x] `schema_version` 필드 정의
+- [x] `ms`, `s` duration parser
+- [x] device/application/scenario/assertions 필수 필드 검증
+- [x] 이벤트별 허용 필드와 자료형 검증
+- [x] fault별 인자 범위 검증
+- [x] 시간 역전과 빈 scenario 거부
+- [x] 오류 위치를 포함한 `ScenarioError`
+- [x] 정상·오류 parser 단위 테스트
+- [x] `docs/scenario-format.md`
 - [ ] Parser PR merge
 
 ### Phase 4 Gate
 
-- [ ] 잘못된 YAML이 실행 전에 정확한 필드 위치와 원인으로 거부됨
+- [x] 잘못된 YAML이 실행 전에 정확한 필드 위치와 원인으로 거부됨
 
 ---
 
@@ -218,9 +218,9 @@
 
 ## Phase 7 — End-to-End Demo와 CI
 
-- [ ] `examples/scenarios/normal.yaml`
-- [ ] `examples/scenarios/recovery.yaml`
-- [ ] `examples/scenarios/disconnect.yaml`
+- [x] `examples/scenarios/normal.yaml`
+- [x] `examples/scenarios/recovery.yaml`
+- [x] `examples/scenarios/disconnect.yaml`
 - [ ] `scripts/setup.sh`
 - [ ] `scripts/load.sh`
 - [ ] `scripts/unload.sh`
@@ -362,3 +362,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-18 | GitHub Gate | Ubuntu/GitHub Actions | kernel module·userspace compile 및 clean target 통과 | Issue #1, Draft PR #6, CI run 32042544936 |
 | 2026-08-18 | Phase 2 소스 구현 | Windows·Ubuntu CI | partial read·reconnect·full reset 구현, delay 허용 기준 문서화 | Commit 80f913a, CI run 32088619189 통과, runtime 대기 |
 | 2026-08-18 | Phase 3 소스 구현 | Windows·Ubuntu CI | poll monitor·구조화 로그·retry/recovery·smoke runner 구현 | Commit 04d400e, CI run 32091074911 통과, runtime 대기 |
+| 2026-08-18 | Phase 4 Gate | Windows·Ubuntu CI | parser 테스트 36개·YAML 3종·CLI 검증 통과 | Commits 64652b7, 96460a9, CI run 32128583841 |
