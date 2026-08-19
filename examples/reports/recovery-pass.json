@@ -2,6 +2,8 @@
   "application": {
     "command": [
       "./examples/vtemp-monitor",
+      "--max-events",
+      "1",
       "--poll-timeout-ms",
       "250"
     ],
@@ -72,9 +74,9 @@
   "observations": {
     "application_retry_count": 3,
     "disconnected": false,
-    "fault_injection_timestamp_ms": 100100.0,
-    "fault_to_first_error_ms": 10.0,
-    "fault_to_recovery_ms": 110.0,
+    "fault_injection_timestamp_ms": 100100,
+    "fault_to_first_error_ms": 10,
+    "fault_to_recovery_ms": 110,
     "first_error_timestamp_ms": 100110,
     "kernel_log": {
       "available": true,
@@ -108,7 +110,7 @@
       "event_index": 0,
       "scheduled_ms": 0,
       "source": "scenario",
-      "timestamp_ms": 100000.0
+      "timestamp_ms": 100000
     },
     {
       "details": {},
@@ -127,7 +129,7 @@
       "event_index": 1,
       "scheduled_ms": 100,
       "source": "scenario",
-      "timestamp_ms": 100100.0
+      "timestamp_ms": 100100
     },
     {
       "details": {
@@ -171,7 +173,7 @@
       "event_index": 2,
       "scheduled_ms": 200,
       "source": "scenario",
-      "timestamp_ms": 100200.0
+      "timestamp_ms": 100200
     },
     {
       "details": {

@@ -139,6 +139,10 @@ vdevlab run examples/scenarios/recovery.yaml --report recovery-report.json
 ```
 
 The report is written for `PASS`, `FAIL`, `ERROR`, and `TIMEOUT` outcomes.
+Scenario dispatch timestamps use the same whole-millisecond resolution as the
+application log. A scenario event sorts before an application event when both
+occur in the same millisecond, preserving the causal order at the clock's
+published resolution.
 Deterministic schema examples are available in
 [`examples/reports/recovery-pass.json`](../examples/reports/recovery-pass.json)
 and [`examples/reports/recovery-fail.json`](../examples/reports/recovery-fail.json).

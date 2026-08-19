@@ -6,6 +6,8 @@ device:
 application:
   command:
     - ./examples/vtemp-monitor
+    - --max-events
+    - "1"
     - --poll-timeout-ms
     - "250"
   startup_timeout: 2s

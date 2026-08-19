@@ -94,7 +94,7 @@ def _dispatch_timeline(
                 "event": "FAULT_INJECTED"
                 if dispatch.action == "fault"
                 else f"{dispatch.action.upper()}_DISPATCHED",
-                "timestamp_ms": dispatch.monotonic_finished_ms,
+                "timestamp_ms": int(dispatch.monotonic_started_ms),
                 "event_index": dispatch.index,
                 "scheduled_ms": dispatch.scheduled_ms,
                 "duration_ms": dispatch.finished_ms - dispatch.started_ms,
@@ -134,14 +134,14 @@ def _sorted_timeline(events: Sequence[Mapping[str, Any]]) -> tuple[Mapping[str, 
 def _first_fault_timestamp(
     scenario: ScenarioDefinition,
     dispatches: Sequence[DispatchRecord],
-) -> float | None:
+) -> int | None:
     for dispatch in dispatches:
         if scenario.events[dispatch.index].get("action") == "fault":
-            return dispatch.monotonic_finished_ms
+            return int(dispatch.monotonic_started_ms)
     return None
 
 
-def _causal_duration(end_ms: int | None, start_ms: float | None) -> float | None:
+def _causal_duration(end_ms: int | None, start_ms: int | None) -> int | None:
     if end_ms is None or start_ms is None:
         return None
     return end_ms - start_ms

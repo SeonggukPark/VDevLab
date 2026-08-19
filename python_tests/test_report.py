@@ -83,12 +83,12 @@ def test_build_passing_causal_report() -> None:
     assert document["observations"] == {
         "observed_eio_count": 3,
         "application_retry_count": 3,
-        "fault_injection_timestamp_ms": 100100.0,
+        "fault_injection_timestamp_ms": 100100,
         "first_error_timestamp_ms": 100110,
         "recovery_timestamp_ms": 100210,
         "recovery_latency_ms": 100,
-        "fault_to_first_error_ms": 10.0,
-        "fault_to_recovery_ms": 110.0,
+        "fault_to_first_error_ms": 10,
+        "fault_to_recovery_ms": 110,
         "recoveries": [
             {
                 "first_error_timestamp_ms": 100110,
@@ -157,10 +157,39 @@ def test_forbidden_stdout_event_produces_fail_report() -> None:
     }
 
 
-def test_passing_report_example_matches_generator() -> None:
-    expected = json.loads((REPORTS / "recovery-pass.json").read_text())
+def test_dispatch_timestamp_uses_application_log_resolution() -> None:
+    result = _result()
+    fault = replace(
+        result.dispatches[1],
+        monotonic_started_ms=100100.9,
+        monotonic_finished_ms=100101.1,
+    )
+    result = replace(
+        result,
+        dispatches=(result.dispatches[0], fault, result.dispatches[2]),
+    )
 
-    assert build_scenario_report(SCENARIO, _result()).to_dict() == expected
+    report = build_scenario_report(SCENARIO, result)
+
+    assert report.observations["fault_injection_timestamp_ms"] == 100100
+    assert report.observations["fault_to_first_error_ms"] == 10
+    fault_index = next(
+        index
+        for index, item in enumerate(report.timeline)
+        if item["event"] == "FAULT_INJECTED"
+    )
+    retry_index = next(
+        index
+        for index, item in enumerate(report.timeline)
+        if item["event"] == "READ_RETRY"
+    )
+    assert fault_index < retry_index
+
+
+def test_passing_report_example_matches_generator() -> None:
+    expected = (REPORTS / "recovery-pass.json").read_text()
+
+    assert build_scenario_report(SCENARIO, _result()).to_json() == expected
 
 
 def test_failing_report_example_matches_generator() -> None:
@@ -168,9 +197,9 @@ def test_failing_report_example_matches_generator() -> None:
         '{"timestamp_ms":100130,"event":"READ_RETRY","retry":3,"max_retries":3,"errno":5}\n',
         "",
     ).replace('"retries":3', '"retries":2')
-    expected = json.loads((REPORTS / "recovery-fail.json").read_text())
+    expected = (REPORTS / "recovery-fail.json").read_text()
 
-    assert build_scenario_report(SCENARIO, _result(two_retry_log)).to_dict() == expected
+    assert build_scenario_report(SCENARIO, _result(two_retry_log)).to_json() == expected
 
 
 def test_nonzero_exit_produces_fail_report() -> None:
