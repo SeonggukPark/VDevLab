@@ -1,5 +1,17 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
+from .analysis import (
+    ApplicationLogError,
+    ApplicationLogEvent,
+    EventCountAssertion,
+    RecoveryMetrics,
+    RecoveryWindow,
+    RetryAssertion,
+    calculate_recovery_metrics,
+    evaluate_event_assertions,
+    evaluate_retry_count,
+    parse_application_log,
+)
 from .scenario import ScenarioDefinition, ScenarioError, ScenarioValidationError, load_scenario
 from .runner import (
     ApplicationProcess,
@@ -16,6 +28,8 @@ from .runner import (
 )
 
 __all__ = [
+    "ApplicationLogError",
+    "ApplicationLogEvent",
     "ApplicationProcess",
     "ApplicationResult",
     "ApplicationTimeoutError",
@@ -25,11 +39,19 @@ __all__ = [
     "ScenarioValidationError",
     "DispatchRecord",
     "EventDispatchError",
+    "EventCountAssertion",
     "FaultConfiguration",
     "LinuxDeviceBackend",
+    "RecoveryMetrics",
+    "RecoveryWindow",
+    "RetryAssertion",
     "RunnerError",
     "ScenarioRunner",
     "ScenarioRunResult",
+    "calculate_recovery_metrics",
+    "evaluate_event_assertions",
+    "evaluate_retry_count",
     "load_scenario",
+    "parse_application_log",
 ]
 __version__ = "0.1.0"
