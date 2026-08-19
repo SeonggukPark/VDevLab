@@ -1,0 +1,197 @@
+{
+  "application": {
+    "command": [
+      "./examples/vtemp-monitor",
+      "--max-events",
+      "1",
+      "--poll-timeout-ms",
+      "250"
+    ],
+    "exit_code": 0,
+    "forced": false,
+    "stderr": "",
+    "stdout": "{\"timestamp_ms\":100000,\"event\":\"MONITOR_STARTED\"}\n{\"timestamp_ms\":100110,\"event\":\"READ_RETRY\",\"retry\":1,\"max_retries\":3,\"errno\":5}\n{\"timestamp_ms\":100120,\"event\":\"READ_RETRY\",\"retry\":2,\"max_retries\":3,\"errno\":5}\n{\"timestamp_ms\":100130,\"event\":\"READ_RETRY\",\"retry\":3,\"max_retries\":3,\"errno\":5}\n{\"timestamp_ms\":100210,\"event\":\"RECOVERY_SUCCESS\",\"retries\":3}\n{\"timestamp_ms\":100210,\"event\":\"TEMPERATURE\",\"temperature_c\":42.0}\n",
+    "timed_out": false
+  },
+  "assertions": [
+    {
+      "event": "READ_RETRY",
+      "expected": 3,
+      "observed": 3,
+      "passed": true,
+      "type": "event_count",
+      "within_ms": 2000
+    },
+    {
+      "event": "RECOVERY_SUCCESS",
+      "expected": 1,
+      "observed": 1,
+      "passed": true,
+      "type": "event_count",
+      "within_ms": 3000
+    },
+    {
+      "event": "TEMPERATURE",
+      "expected": 1,
+      "observed": 1,
+      "passed": true,
+      "type": "event_count",
+      "within_ms": 3000
+    },
+    {
+      "operator": "contains",
+      "passed": true,
+      "text": "RECOVERY_SUCCESS",
+      "type": "stdout"
+    },
+    {
+      "operator": "not_contains",
+      "passed": true,
+      "text": "READ_FAILED",
+      "type": "stdout"
+    },
+    {
+      "available": true,
+      "expected": 0,
+      "observed": 0,
+      "passed": true,
+      "type": "kernel_warnings"
+    },
+    {
+      "expected": 0,
+      "observed": 0,
+      "passed": true,
+      "type": "process_exit_code"
+    },
+    {
+      "maximum_ms": 1000,
+      "observed_ms": 100,
+      "passed": true,
+      "type": "recovery_latency"
+    }
+  ],
+  "error": null,
+  "observations": {
+    "application_retry_count": 3,
+    "disconnected": false,
+    "fault_injection_timestamp_ms": 100100,
+    "fault_to_first_error_ms": 10,
+    "fault_to_recovery_ms": 110,
+    "first_error_timestamp_ms": 100110,
+    "kernel_log": {
+      "available": true,
+      "error": null,
+      "warning_count": 0,
+      "warnings": []
+    },
+    "observed_eio_count": 3,
+    "recoveries": [
+      {
+        "first_error_timestamp_ms": 100110,
+        "observed_retries": 3,
+        "recovery_latency_ms": 100,
+        "recovery_timestamp_ms": 100210,
+        "reported_retries": 3
+      }
+    ],
+    "recovery_latency_ms": 100,
+    "recovery_timestamp_ms": 100210
+  },
+  "scenario": {
+    "name": "three-eio-recovery"
+  },
+  "schema_version": 1,
+  "status": "PASS",
+  "timeline": [
+    {
+      "details": {},
+      "duration_ms": 0.0,
+      "event": "RESET_DISPATCHED",
+      "event_index": 0,
+      "scheduled_ms": 0,
+      "source": "scenario",
+      "timestamp_ms": 100000
+    },
+    {
+      "details": {},
+      "event": "MONITOR_STARTED",
+      "line": 1,
+      "source": "application",
+      "timestamp_ms": 100000
+    },
+    {
+      "details": {
+        "repeat": 3,
+        "type": "eio"
+      },
+      "duration_ms": 0.0,
+      "event": "FAULT_INJECTED",
+      "event_index": 1,
+      "scheduled_ms": 100,
+      "source": "scenario",
+      "timestamp_ms": 100100
+    },
+    {
+      "details": {
+        "errno": 5,
+        "max_retries": 3,
+        "retry": 1
+      },
+      "event": "READ_RETRY",
+      "line": 2,
+      "source": "application",
+      "timestamp_ms": 100110
+    },
+    {
+      "details": {
+        "errno": 5,
+        "max_retries": 3,
+        "retry": 2
+      },
+      "event": "READ_RETRY",
+      "line": 3,
+      "source": "application",
+      "timestamp_ms": 100120
+    },
+    {
+      "details": {
+        "errno": 5,
+        "max_retries": 3,
+        "retry": 3
+      },
+      "event": "READ_RETRY",
+      "line": 4,
+      "source": "application",
+      "timestamp_ms": 100130
+    },
+    {
+      "details": {
+        "data": "42\n"
+      },
+      "duration_ms": 0.0,
+      "event": "WRITE_DISPATCHED",
+      "event_index": 2,
+      "scheduled_ms": 200,
+      "source": "scenario",
+      "timestamp_ms": 100200
+    },
+    {
+      "details": {
+        "retries": 3
+      },
+      "event": "RECOVERY_SUCCESS",
+      "line": 5,
+      "source": "application",
+      "timestamp_ms": 100210
+    },
+    {
+      "details": {
+        "temperature_c": 42.0
+      },
+      "event": "TEMPERATURE",
+      "line": 6,
+      "source": "application",
+      "timestamp_ms": 100210
+    }
+  ]
+}

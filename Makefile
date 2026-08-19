@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
-.PHONY: all kernel-module userspace tools tests examples python-test contract-test smoke-test clean
+.PHONY: all kernel-module userspace tools tests examples python-test setup demo contract-test smoke-test clean
 
 all: kernel-module userspace
 
@@ -20,6 +20,12 @@ examples:
 
 python-test:
 	python -m pytest
+
+setup:
+	./scripts/setup.sh
+
+demo:
+	./scripts/demo.sh
 
 contract-test: all
 	bash ./scripts/run-kernel-contract-test.sh

@@ -94,11 +94,31 @@ assertions:
   - event: RECOVERY_SUCCESS
     count: 1
     within: 3s
+    max_latency: 1s
 ```
 
 `event` must be one of the structured events documented for the sample
 monitor. `count` is a positive integer. Optional `within` must not exceed the
-scenario timeout.
+scenario timeout. `max_latency` is available only for `RECOVERY_SUCCESS` and
+limits the time from the first retryable error to the recovery event.
+
+Additional assertion types use an explicit `type` discriminator:
+
+```yaml
+  - type: stdout
+    contains: RECOVERY_SUCCESS
+    not_contains: READ_FAILED
+  - type: disconnect
+    expected: true
+  - type: kernel_warnings
+    count: 0
+```
+
+`stdout` accepts `contains`, `not_contains`, or both. `disconnect` checks for a
+structured `DEVICE_DISCONNECTED` application event. `kernel_warnings` compares
+new warning-or-higher `dmesg` entries recorded during the scenario. A requested
+kernel log assertion produces `ERROR`, not a false pass, when the log cannot be
+read; run these scenarios with sufficient permission to read the kernel log.
 
 ## Validation
 
@@ -110,6 +130,23 @@ python -m pip install --editable '.[test]'
 vdevlab validate examples/scenarios/*.yaml
 python -m pytest
 ```
+
+Run a scenario with `--report` to persist its status, observations, assertion
+results, and monotonic causal timeline as JSON:
+
+```bash
+vdevlab run examples/scenarios/recovery.yaml --report recovery-report.json
+```
+
+The report is written for `PASS`, `FAIL`, `ERROR`, and `TIMEOUT` outcomes.
+Scenario dispatch timestamps use the same whole-millisecond resolution as the
+application log. A scenario event sorts before an application event when both
+occur in the same millisecond, preserving the causal order at the clock's
+published resolution.
+Deterministic schema examples are available in
+[`examples/reports/recovery-pass.json`](../examples/reports/recovery-pass.json)
+and [`examples/reports/recovery-fail.json`](../examples/reports/recovery-fail.json).
+Its top-level `schema_version` is independent of the scenario format version.
 
 Successful output includes the scenario name and normalized event and
 assertion counts. Validation failure exits with status 2 and prints one stable,

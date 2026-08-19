@@ -17,9 +17,12 @@ import pytest
 from vdevlab.runner import (
     ApplicationProcess,
     ApplicationTimeoutError,
+    DmesgKernelLogCollector,
     EventDispatchError,
     FaultConfiguration,
     LinuxDeviceBackend,
+    KernelLogObservation,
+    KernelLogSnapshot,
     RunnerError,
     ScenarioRunner,
     ScenarioScheduler,
@@ -67,6 +70,48 @@ class FakeBackend:
         self._record("fault", configuration)
 
 
+def test_dmesg_collector_returns_only_new_warning_lines() -> None:
+    responses = iter(
+        (
+            subprocess.CompletedProcess(
+                args=("dmesg",), returncode=0, stdout="old one\nold two\n", stderr=""
+            ),
+            subprocess.CompletedProcess(
+                args=("dmesg",),
+                returncode=0,
+                stdout="old one\nold two\nnew warning\n",
+                stderr="",
+            ),
+        )
+    )
+    collector = DmesgKernelLogCollector(
+        command_runner=lambda *args, **kwargs: next(responses)
+    )
+
+    observation = collector.observe(collector.snapshot())
+
+    assert observation.available is True
+    assert observation.warnings == ("new warning",)
+    assert observation.error is None
+
+
+def test_dmesg_collector_reports_unavailable_log() -> None:
+    collector = DmesgKernelLogCollector(
+        command_runner=lambda *args, **kwargs: subprocess.CompletedProcess(
+            args=("dmesg",),
+            returncode=1,
+            stdout="",
+            stderr="read kernel buffer failed: Operation not permitted\n",
+        )
+    )
+
+    observation = collector.observe(collector.snapshot())
+
+    assert observation.available is False
+    assert observation.warnings == ()
+    assert "Operation not permitted" in (observation.error or "")
+
+
 def test_scheduler_uses_absolute_monotonic_deadlines() -> None:
     clock = FakeClock()
     backend = FakeBackend()
@@ -82,6 +127,12 @@ def test_scheduler_uses_absolute_monotonic_deadlines() -> None:
     )
 
     assert [record.started_ms for record in records] == pytest.approx([0, 100, 250])
+    assert [record.monotonic_started_ms for record in records] == pytest.approx(
+        [100_000, 100_100, 100_250]
+    )
+    assert [record.monotonic_finished_ms for record in records] == pytest.approx(
+        [100_000, 100_100, 100_250]
+    )
     assert clock.sleeps == pytest.approx([0.1, 0.15])
     assert backend.calls == [
         ("reset", None),
@@ -564,6 +615,46 @@ def test_scenario_runner_cleans_backend_after_success() -> None:
     assert result.application == expected
     assert backend.calls[-1] == ("reset", None)
     assert backend.closed is True
+
+
+def test_scenario_runner_collects_kernel_warnings_when_requested() -> None:
+    scenario = load_scenario(
+        Path(__file__).parents[1] / "examples/scenarios/recovery.yaml"
+    )
+    backend = FakeBackend()
+    backend.close = lambda: None
+    expected = ApplicationProcess((sys.executable, "-c", "print('done')")).collect()
+    application = FakeApplication(expected)
+
+    class FakeKernelLogCollector:
+        def __init__(self) -> None:
+            self.snapshot_calls = 0
+            self.observe_calls = 0
+
+        def snapshot(self) -> KernelLogSnapshot:
+            self.snapshot_calls += 1
+            return KernelLogSnapshot(("old warning",))
+
+        def observe(self, before: KernelLogSnapshot) -> KernelLogObservation:
+            self.observe_calls += 1
+            assert before.lines == ("old warning",)
+            return KernelLogObservation(True, ("new warning",))
+
+    collector = FakeKernelLogCollector()
+    runner = ScenarioRunner(
+        backend_factory=lambda path: backend,
+        application_factory=lambda command, cwd=None: application,
+        scheduler=ScenarioScheduler(FakeClock().monotonic, lambda duration: None),
+        clock=lambda: 100.0,
+        kernel_log_collector=collector,
+    )
+
+    result = runner.run(scenario)
+
+    assert collector.snapshot_calls == 1
+    assert collector.observe_calls == 1
+    assert result.kernel_log_available is True
+    assert result.kernel_warnings == ("new warning",)
 
 
 @pytest.mark.parametrize("failure", (OSError("dispatch failed"), KeyboardInterrupt()))

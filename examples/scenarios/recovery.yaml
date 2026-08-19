@@ -6,6 +6,8 @@ device:
 application:
   command:
     - ./examples/vtemp-monitor
+    - --max-events
+    - "1"
     - --poll-timeout-ms
     - "250"
   startup_timeout: 2s
@@ -31,6 +33,12 @@ assertions:
   - event: RECOVERY_SUCCESS
     count: 1
     within: 3s
+    max_latency: 1s
   - event: TEMPERATURE
     count: 1
     within: 3s
+  - type: stdout
+    contains: RECOVERY_SUCCESS
+    not_contains: READ_FAILED
+  - type: kernel_warnings
+    count: 0

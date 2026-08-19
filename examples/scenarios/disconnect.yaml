@@ -30,3 +30,10 @@ assertions:
   - event: DEVICE_DISCONNECTED
     count: 1
     within: 3s
+  - type: stdout
+    contains: DEVICE_DISCONNECTED
+    not_contains: READ_FAILED
+  - type: disconnect
+    expected: true
+  - type: kernel_warnings
+    count: 0

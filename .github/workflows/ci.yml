@@ -37,6 +37,10 @@ jobs:
 
       - name: Check shell syntax
         run: |
+          bash -n scripts/setup.sh
+          bash -n scripts/load.sh
+          bash -n scripts/unload.sh
+          bash -n scripts/demo.sh
           bash -n scripts/run-kernel-contract-test.sh
           bash -n scripts/run-vtemp-smoke-test.sh
 

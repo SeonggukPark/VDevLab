@@ -221,6 +221,65 @@ def _parse_scenario(value: Any) -> tuple[str, int, tuple[Mapping[str, Any], ...]
     return name, timeout_ms, tuple(item[2] for item in parsed)
 
 
+def _parse_event_assertion(
+    assertion: Mapping[str, Any], path: str, timeout_ms: int
+) -> Mapping[str, Any]:
+    _required(assertion, {"event", "count"}, path)
+    _allowed(assertion, {"type", "event", "count", "within", "max_latency"}, path)
+
+    event = _non_empty_string(assertion["event"], f"{path}.event")
+    if event not in _LOG_EVENTS:
+        raise ScenarioValidationError(f"{path}.event", "is not a supported log event")
+    normalized: dict[str, Any] = {
+        "type": "event_count",
+        "event": event,
+        "count": _bounded_integer(assertion["count"], f"{path}.count", 1, 1_000_000),
+    }
+    if "within" in assertion:
+        within_ms = parse_duration(assertion["within"], f"{path}.within")
+        if within_ms > timeout_ms:
+            raise ScenarioValidationError(
+                f"{path}.within", "must not exceed scenario.timeout"
+            )
+        normalized["within_ms"] = within_ms
+    if "max_latency" in assertion:
+        if event != "RECOVERY_SUCCESS":
+            raise ScenarioValidationError(
+                f"{path}.max_latency",
+                "is only valid for RECOVERY_SUCCESS",
+            )
+        maximum_latency_ms = parse_duration(
+            assertion["max_latency"], f"{path}.max_latency"
+        )
+        if maximum_latency_ms > timeout_ms:
+            raise ScenarioValidationError(
+                f"{path}.max_latency", "must not exceed scenario.timeout"
+            )
+        normalized["max_latency_ms"] = maximum_latency_ms
+    return normalized
+
+
+def _parse_stdout_assertion(
+    assertion: Mapping[str, Any], path: str
+) -> Mapping[str, Any]:
+    _allowed(assertion, {"type", "contains", "not_contains"}, path)
+    if "contains" not in assertion and "not_contains" not in assertion:
+        raise ScenarioValidationError(
+            path, "stdout assertion requires contains or not_contains"
+        )
+
+    normalized: dict[str, Any] = {"type": "stdout"}
+    if "contains" in assertion:
+        normalized["contains"] = _non_empty_string(
+            assertion["contains"], f"{path}.contains"
+        )
+    if "not_contains" in assertion:
+        normalized["not_contains"] = _non_empty_string(
+            assertion["not_contains"], f"{path}.not_contains"
+        )
+    return normalized
+
+
 def _parse_assertions(value: Any, timeout_ms: int) -> tuple[Mapping[str, Any], ...]:
     if not isinstance(value, list) or not value:
         raise ScenarioValidationError("assertions", "must be a non-empty list")
@@ -229,23 +288,33 @@ def _parse_assertions(value: Any, timeout_ms: int) -> tuple[Mapping[str, Any], .
     for index, raw_assertion in enumerate(value):
         path = f"assertions[{index}]"
         assertion = _mapping(raw_assertion, path)
-        _required(assertion, {"event", "count"}, path)
-        _allowed(assertion, {"event", "count", "within"}, path)
 
-        event = _non_empty_string(assertion["event"], f"{path}.event")
-        if event not in _LOG_EVENTS:
-            raise ScenarioValidationError(f"{path}.event", "is not a supported log event")
-        normalized: dict[str, Any] = {
-            "event": event,
-            "count": _bounded_integer(assertion["count"], f"{path}.count", 1, 1_000_000),
-        }
-        if "within" in assertion:
-            within_ms = parse_duration(assertion["within"], f"{path}.within")
-            if within_ms > timeout_ms:
-                raise ScenarioValidationError(
-                    f"{path}.within", "must not exceed scenario.timeout"
-                )
-            normalized["within_ms"] = within_ms
+        assertion_type = assertion.get("type", "event_count")
+        if assertion_type == "event_count":
+            normalized = _parse_event_assertion(assertion, path, timeout_ms)
+        elif assertion_type == "stdout":
+            normalized = _parse_stdout_assertion(assertion, path)
+        elif assertion_type == "disconnect":
+            _required(assertion, {"type", "expected"}, path)
+            _allowed(assertion, {"type", "expected"}, path)
+            expected = assertion["expected"]
+            if not isinstance(expected, bool):
+                raise ScenarioValidationError(f"{path}.expected", "must be a boolean")
+            normalized = {"type": "disconnect", "expected": expected}
+        elif assertion_type == "kernel_warnings":
+            _required(assertion, {"type", "count"}, path)
+            _allowed(assertion, {"type", "count"}, path)
+            normalized = {
+                "type": "kernel_warnings",
+                "count": _bounded_integer(
+                    assertion["count"], f"{path}.count", 0, 1_000_000
+                ),
+            }
+        else:
+            raise ScenarioValidationError(
+                f"{path}.type",
+                "must be one of: disconnect, event_count, kernel_warnings, stdout",
+            )
         parsed.append(normalized)
 
     return tuple(parsed)

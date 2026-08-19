@@ -5,9 +5,16 @@ from __future__ import annotations
 import argparse
 from collections.abc import Sequence
 from glob import glob, has_magic
+from pathlib import Path
 import sys
 
 from . import __version__
+from .report import (
+    ReportStatus,
+    ScenarioReport,
+    build_error_report,
+    build_scenario_report,
+)
 from .runner import RunnerError, ScenarioRunner
 from .scenario import ScenarioValidationError, load_scenario
 
@@ -23,7 +30,27 @@ def _parser() -> argparse.ArgumentParser:
     run = commands.add_parser("run", help="run a scenario against its device")
     run.add_argument("path", help="scenario YAML path")
     run.add_argument("--cwd", default=".", help="application working directory")
+    run.add_argument("--report", help="write a causal JSON report to this path")
     return parser
+
+
+def _write_report(path: str | None, report: ScenarioReport) -> None:
+    if path is None:
+        return
+    Path(path).write_text(report.to_json(), encoding="utf-8")
+
+
+def _write_error_report(
+    path: str | None,
+    scenario_name: str,
+    error: BaseException,
+) -> bool:
+    try:
+        _write_report(path, build_error_report(scenario_name, error))
+    except OSError as report_error:
+        print(f"error: cannot write report: {report_error}", file=sys.stderr)
+        return False
+    return True
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -49,17 +76,33 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     if arguments.command == "run":
+        scenario_name = Path(arguments.path).stem
         try:
             scenario = load_scenario(arguments.path)
+            scenario_name = scenario.name
             result = ScenarioRunner().run(scenario, cwd=arguments.cwd)
         except ScenarioValidationError as error:
+            _write_error_report(arguments.report, scenario_name, error)
             print(f"error: {error}", file=sys.stderr)
             return 2
         except KeyboardInterrupt:
+            _write_error_report(
+                arguments.report,
+                scenario_name,
+                RuntimeError("interrupted"),
+            )
             print("error: interrupted", file=sys.stderr)
             return 130
         except (OSError, RunnerError) as error:
+            _write_error_report(arguments.report, scenario_name, error)
             print(f"error: {error}", file=sys.stderr)
+            return 1
+
+        report = build_scenario_report(scenario, result)
+        try:
+            _write_report(arguments.report, report)
+        except OSError as error:
+            print(f"error: cannot write report: {error}", file=sys.stderr)
             return 1
 
         if result.application.stdout:
@@ -71,13 +114,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"exit_code={result.application.exit_code} "
             f"timed_out={str(result.application.timed_out).lower()} "
             f"forced={str(result.application.forced).lower()} "
-            f"events={len(result.dispatches)}"
+            f"events={len(result.dispatches)} "
+            f"status={report.status.value}"
         )
 
-        if result.application.timed_out:
+        if report.status is ReportStatus.TIMEOUT:
             return 124
         if result.application.exit_code != 0:
             return result.application.exit_code if 1 <= result.application.exit_code <= 125 else 1
+        if report.status is not ReportStatus.PASS:
+            return 1
         return 0
 
     return 2

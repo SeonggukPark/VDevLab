@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-19
 > 출품 마감: 2026-08-27
-> 현재 단계: Phase 6 — Recovery Assertion과 Causal JSON Report 구현
-> 현재 브랜치: `issue-1/scenario-runner`
-> 다음 실행: application log event parser와 retry count assertion 구현
+> 현재 단계: Phase 6 Gate 완료 — Assertion/report PR 병합 준비
+> 현재 브랜치: `issue-1/recovery-report`
+> 다음 실행: PR #8 self-review, CI 확인 및 병합
 
 ## 체크 규칙
 
@@ -182,7 +182,7 @@
 - [x] timeout process 종료와 강제 종료 fallback
 - [x] 모든 종료 경로에서 fault clear/reset
 - [x] scheduler와 fake backend 단위 테스트
-- [ ] Runner PR merge
+- [x] Runner PR merge
 
 ### Phase 5 Gate
 
@@ -192,27 +192,27 @@
 
 ## Phase 6 — Recovery Assertion과 Causal JSON Report
 
-- [ ] observed EIO 횟수 계산
-- [ ] application retry 횟수 계산
-- [ ] fault injection timestamp 기록
-- [ ] first error timestamp 기록
-- [ ] recovery timestamp와 latency 계산
-- [ ] retry count assertion
-- [ ] recovery latency assertion
-- [ ] stdout contains/not-contains assertion
-- [ ] process exit-code assertion
-- [ ] disconnect assertion
-- [ ] kernel warning assertion
-- [ ] PASS·FAIL·ERROR·TIMEOUT 모두 JSON 생성
-- [ ] JSON `schema_version` 추가
-- [ ] report serialization 단위 테스트
-- [ ] 의도적 PASS report 예제 저장
-- [ ] 의도적 FAIL report 예제 저장
+- [x] observed EIO 횟수 계산
+- [x] application retry 횟수 계산
+- [x] fault injection timestamp 기록
+- [x] first error timestamp 기록
+- [x] recovery timestamp와 latency 계산
+- [x] retry count assertion
+- [x] recovery latency assertion
+- [x] stdout contains/not-contains assertion
+- [x] process exit-code assertion
+- [x] disconnect assertion
+- [x] kernel warning assertion
+- [x] PASS·FAIL·ERROR·TIMEOUT 모두 JSON 생성
+- [x] JSON `schema_version` 추가
+- [x] report serialization 단위 테스트
+- [x] 의도적 PASS report 예제 저장
+- [x] 의도적 FAIL report 예제 저장
 - [ ] Assertion/report PR merge
 
 ### Phase 6 Gate
 
-- [ ] fault → errno → retry → recovery의 인과 타임라인이 JSON 하나에 기록됨
+- [x] fault → errno → retry → recovery의 인과 타임라인이 JSON 하나에 기록됨
 
 ---
 
@@ -221,23 +221,23 @@
 - [x] `examples/scenarios/normal.yaml`
 - [x] `examples/scenarios/recovery.yaml`
 - [x] `examples/scenarios/disconnect.yaml`
-- [ ] `scripts/setup.sh`
-- [ ] `scripts/load.sh`
-- [ ] `scripts/unload.sh`
-- [ ] `scripts/demo.sh`
-- [ ] demo 실패 경로 cleanup trap
+- [x] `scripts/setup.sh`
+- [x] `scripts/load.sh`
+- [x] `scripts/unload.sh`
+- [x] `scripts/demo.sh`
+- [x] demo 실패 경로 cleanup trap
 - [x] GitHub Actions kernel/userspace compile 통과
-- [ ] GitHub Actions 사용자 공간 단위 테스트 통과
+- [x] GitHub Actions 사용자 공간 단위 테스트 통과
 - [ ] CI badge
-- [ ] `sudo ./scripts/demo.sh` 5회 연속 실행
-- [ ] 종료 후 test process 0
-- [ ] 종료 후 fault state 0
-- [ ] 종료 후 device node 0
+- [x] `sudo ./scripts/demo.sh` 5회 연속 실행
+- [x] 종료 후 test process 0
+- [x] 종료 후 fault state 0
+- [x] 종료 후 device node 0
 - [ ] Demo/CI PR merge
 
 ### Phase 7 Gate
 
-- [ ] 한 명령으로 build → fault injection → assertion → report → cleanup 완료
+- [x] 한 명령으로 build → fault injection → assertion → report → cleanup 완료
 
 ---
 
@@ -370,3 +370,9 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-19 | Phase 5 timeout | Windows/Python 3 | timeout 감지, 정상 종료 유예, process group 강제 종료 fallback, TIMEOUT 결과 플래그 검증; 전체 68개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
 | 2026-08-19 | Phase 5 cleanup | Windows/Python 3 | 정상·timeout·dispatch failure·Ctrl+C 경로의 process 종료와 device reset/close 검증; 전체 71개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
 | 2026-08-19 | Phase 5 Ubuntu VM Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | `normal.yaml` end-to-end 실행, MONITOR_STARTED·온도 25/42, exit 0, timeout false, fault none, module·device·process cleanup 확인 | Commit `894649a`, [PR #7 runtime 기록](https://github.com/SeonggukPark/VDevLab/pull/7#issuecomment-5338375659) |
+| 2026-08-19 | Phase 5 Merge Gate | GitHub | 76개 테스트, Ubuntu kernel end-to-end, CI 통과 후 Scenario Runner 병합 | PR #7, merge `ae1dd96`, CI run 32223452813 |
+| 2026-08-19 | Phase 6 recovery analysis·timing | Windows·Ubuntu/Python 3 | JSONL event 검증, EIO·retry 횟수, 최초 오류·복구 시각과 latency, event count/within assertion 검증; 절대 monotonic dispatch 시각과 recovery latency 상한 추가; 양 환경 전체 106개 테스트 통과 | Commits `5fbe707`, `7a23e92`, `src/vdevlab/analysis.py` |
+| 2026-08-19 | Phase 6 causal JSON report | Windows·Ubuntu/Python 3 | PASS·FAIL·ERROR·TIMEOUT 분류, schema v1, fault→error→recovery timeline, exit-code assertion, 안정적 JSON serialization과 CLI 파일 출력 검증; 양 환경 전체 118개 테스트 통과 | Commit `5826940`, `src/vdevlab/report.py` |
+| 2026-08-19 | Phase 6 assertion 확장·report 예제 | Windows·Ubuntu/Python 3 | stdout 포함·제외, disconnect, kernel warning assertion 구현과 PASS/FAIL schema 예제 고정; 양 환경 전체 138개 테스트 통과, kernel runtime 대기 | Commits `9239259`, `5dfff58`, PR #8 |
+| 2026-08-19 | Phase 7 setup·CI | Ubuntu VM·GitHub Actions | setup 한 번으로 venv 설치, 138개 테스트, YAML 3종 검증, kernel/userspace build 통과; 신규 스크립트 Bash 구문과 CI clean target 통과 | Commit `03b42e0`, CI run 32259081736, PR #8 |
+| 2026-08-19 | Phase 6·7 runtime Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | 초기 TIMEOUT과 sub-ms 인과 순서 문제 발견·수정; demo 5회 연속, recovery/disconnect report 각 5개 PASS, kernel warning 0건, causal order 정상, fault·process·module·device cleanup 확인 | Commit `f290314`, VM `logs/demo-gate-20260819T135349Z-{1..5}.log`, PR #8 |
