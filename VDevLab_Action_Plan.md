@@ -3,7 +3,7 @@
 > 마지막 갱신: 2026-08-19
 > 출품 마감: 2026-08-27
 > 현재 단계: Phase 6 — Recovery Assertion과 Causal JSON Report 구현
-> 현재 브랜치: `issue-1/scenario-runner`
+> 현재 브랜치: `issue-1/recovery-report`
 > 다음 실행: application log event parser와 retry count assertion 구현
 
 ## 체크 규칙
@@ -182,7 +182,7 @@
 - [x] timeout process 종료와 강제 종료 fallback
 - [x] 모든 종료 경로에서 fault clear/reset
 - [x] scheduler와 fake backend 단위 테스트
-- [ ] Runner PR merge
+- [x] Runner PR merge
 
 ### Phase 5 Gate
 
@@ -370,3 +370,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-19 | Phase 5 timeout | Windows/Python 3 | timeout 감지, 정상 종료 유예, process group 강제 종료 fallback, TIMEOUT 결과 플래그 검증; 전체 68개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
 | 2026-08-19 | Phase 5 cleanup | Windows/Python 3 | 정상·timeout·dispatch failure·Ctrl+C 경로의 process 종료와 device reset/close 검증; 전체 71개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
 | 2026-08-19 | Phase 5 Ubuntu VM Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | `normal.yaml` end-to-end 실행, MONITOR_STARTED·온도 25/42, exit 0, timeout false, fault none, module·device·process cleanup 확인 | Commit `894649a`, [PR #7 runtime 기록](https://github.com/SeonggukPark/VDevLab/pull/7#issuecomment-5338375659) |
+| 2026-08-19 | Phase 5 Merge Gate | GitHub | 76개 테스트, Ubuntu kernel end-to-end, CI 통과 후 Scenario Runner 병합 | PR #7, merge `ae1dd96`, CI run 32223452813 |
