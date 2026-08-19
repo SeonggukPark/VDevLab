@@ -113,6 +113,16 @@ vdevlab validate examples/scenarios/*.yaml
 python -m pytest
 ```
 
+Run a scenario with `--report` to persist its status, observations, assertion
+results, and monotonic causal timeline as JSON:
+
+```bash
+vdevlab run examples/scenarios/recovery.yaml --report recovery-report.json
+```
+
+The report is written for `PASS`, `FAIL`, `ERROR`, and `TIMEOUT` outcomes.
+Its top-level `schema_version` is independent of the scenario format version.
+
 Successful output includes the scenario name and normalized event and
 assertion counts. Validation failure exits with status 2 and prints one stable,
 path-qualified error.

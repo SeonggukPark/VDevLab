@@ -107,6 +107,23 @@ def test_evaluate_recovery_latency_fails_without_recovery() -> None:
     assert assertion.passed is False
 
 
+def test_evaluate_recovery_latency_uses_slowest_recovery() -> None:
+    text = "\n".join(
+        (
+            '{"timestamp_ms":10,"event":"READ_RETRY","retry":1,"errno":5}',
+            '{"timestamp_ms":20,"event":"RECOVERY_SUCCESS","retries":1}',
+            '{"timestamp_ms":30,"event":"READ_RETRY","retry":1,"errno":5}',
+            '{"timestamp_ms":80,"event":"RECOVERY_SUCCESS","retries":1}',
+        )
+    )
+    metrics = calculate_recovery_metrics(parse_application_log(text))
+
+    assertion = evaluate_recovery_latency(metrics, 40)
+
+    assert assertion.observed_ms == 50
+    assert assertion.passed is False
+
+
 def test_evaluate_event_assertions_applies_count_and_within_window() -> None:
     events = parse_application_log(RECOVERY_LOG)
 

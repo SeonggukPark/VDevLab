@@ -205,7 +205,10 @@ def evaluate_recovery_latency(
     maximum = _require_nonnegative_integer(
         maximum_ms, line=0, field="maximum recovery latency"
     )
-    observed = metrics.recovery_latency_ms
+    observed = max(
+        (window.recovery_latency_ms for window in metrics.recoveries),
+        default=None,
+    )
     return RecoveryLatencyAssertion(
         maximum_ms=maximum,
         observed_ms=observed,

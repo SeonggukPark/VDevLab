@@ -15,6 +15,13 @@ from .analysis import (
     parse_application_log,
 )
 from .scenario import ScenarioDefinition, ScenarioError, ScenarioValidationError, load_scenario
+from .report import (
+    REPORT_SCHEMA_VERSION,
+    ReportStatus,
+    ScenarioReport,
+    build_error_report,
+    build_scenario_report,
+)
 from .runner import (
     ApplicationProcess,
     ApplicationResult,
@@ -47,10 +54,15 @@ __all__ = [
     "RecoveryMetrics",
     "RecoveryLatencyAssertion",
     "RecoveryWindow",
+    "REPORT_SCHEMA_VERSION",
+    "ReportStatus",
     "RetryAssertion",
     "RunnerError",
     "ScenarioRunner",
     "ScenarioRunResult",
+    "ScenarioReport",
+    "build_error_report",
+    "build_scenario_report",
     "calculate_recovery_metrics",
     "evaluate_event_assertions",
     "evaluate_recovery_latency",
