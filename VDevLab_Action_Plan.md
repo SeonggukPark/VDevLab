@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-19
 > 출품 마감: 2026-08-27
-> 현재 단계: Phase 6 Gate 완료 — Assertion/report PR 병합 준비
-> 현재 브랜치: `issue-1/recovery-report`
-> 다음 실행: PR #8 self-review, CI 확인 및 병합
+> 현재 단계: Phase 7 Gate 완료 — Issue #2 재현 가능한 실행 환경
+> 현재 브랜치: `issue-2/reproducible-environment`
+> 다음 실행: README 기준 fresh clone 재현 검증
 
 ## 체크 규칙
 
@@ -208,7 +208,7 @@
 - [x] report serialization 단위 테스트
 - [x] 의도적 PASS report 예제 저장
 - [x] 의도적 FAIL report 예제 저장
-- [ ] Assertion/report PR merge
+- [x] Assertion/report PR merge
 
 ### Phase 6 Gate
 
@@ -228,12 +228,12 @@
 - [x] demo 실패 경로 cleanup trap
 - [x] GitHub Actions kernel/userspace compile 통과
 - [x] GitHub Actions 사용자 공간 단위 테스트 통과
-- [ ] CI badge
+- [x] CI badge
 - [x] `sudo ./scripts/demo.sh` 5회 연속 실행
 - [x] 종료 후 test process 0
 - [x] 종료 후 fault state 0
 - [x] 종료 후 device node 0
-- [ ] Demo/CI PR merge
+- [x] Demo/CI PR merge
 
 ### Phase 7 Gate
 
@@ -269,9 +269,9 @@
 
 ## Phase 9 — 개발 문서와 혁신성 설명
 
-- [ ] README 30초 소개
-- [ ] README 3분 Quick Start
-- [ ] README demo output과 JSON 예제
+- [x] README 30초 소개
+- [x] README 3분 Quick Start
+- [x] README demo output과 JSON 예제
 - [ ] `docs/architecture.md`
 - [ ] `docs/alternatives.md`
 - [ ] ADR: kernel module 선택 이유
@@ -376,3 +376,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-19 | Phase 6 assertion 확장·report 예제 | Windows·Ubuntu/Python 3 | stdout 포함·제외, disconnect, kernel warning assertion 구현과 PASS/FAIL schema 예제 고정; 양 환경 전체 138개 테스트 통과, kernel runtime 대기 | Commits `9239259`, `5dfff58`, PR #8 |
 | 2026-08-19 | Phase 7 setup·CI | Ubuntu VM·GitHub Actions | setup 한 번으로 venv 설치, 138개 테스트, YAML 3종 검증, kernel/userspace build 통과; 신규 스크립트 Bash 구문과 CI clean target 통과 | Commit `03b42e0`, CI run 32259081736, PR #8 |
 | 2026-08-19 | Phase 6·7 runtime Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | 초기 TIMEOUT과 sub-ms 인과 순서 문제 발견·수정; demo 5회 연속, recovery/disconnect report 각 5개 PASS, kernel warning 0건, causal order 정상, fault·process·module·device cleanup 확인 | Commit `f290314`, VM `logs/demo-gate-20260819T135349Z-{1..5}.log`, PR #8 |
+| 2026-08-19 | Phase 6·7 Merge Gate | GitHub | causal report, assertions, one-command demo, Ubuntu runtime 증거와 CI 통과 후 main 병합; Issue #1 완료 처리 | PR #8, merge `aa00587`, CI run 32260935437 |
