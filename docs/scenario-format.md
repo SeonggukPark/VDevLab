@@ -139,6 +139,9 @@ vdevlab run examples/scenarios/recovery.yaml --report recovery-report.json
 ```
 
 The report is written for `PASS`, `FAIL`, `ERROR`, and `TIMEOUT` outcomes.
+Deterministic schema examples are available in
+[`examples/reports/recovery-pass.json`](../examples/reports/recovery-pass.json)
+and [`examples/reports/recovery-fail.json`](../examples/reports/recovery-fail.json).
 Its top-level `schema_version` is independent of the scenario format version.
 
 Successful output includes the scenario name and normalized event and

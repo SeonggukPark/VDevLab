@@ -17,6 +17,7 @@ from vdevlab.scenario import load_scenario
 
 
 ROOT = Path(__file__).parents[1]
+REPORTS = ROOT / "examples" / "reports"
 SCENARIO = load_scenario(ROOT / "examples" / "scenarios" / "recovery.yaml")
 DISCONNECT_SCENARIO = load_scenario(
     ROOT / "examples" / "scenarios" / "disconnect.yaml"
@@ -154,6 +155,22 @@ def test_forbidden_stdout_event_produces_fail_report() -> None:
         "text": "READ_FAILED",
         "passed": False,
     }
+
+
+def test_passing_report_example_matches_generator() -> None:
+    expected = json.loads((REPORTS / "recovery-pass.json").read_text())
+
+    assert build_scenario_report(SCENARIO, _result()).to_dict() == expected
+
+
+def test_failing_report_example_matches_generator() -> None:
+    two_retry_log = PASSING_LOG.replace(
+        '{"timestamp_ms":100130,"event":"READ_RETRY","retry":3,"max_retries":3,"errno":5}\n',
+        "",
+    ).replace('"retries":3', '"retries":2')
+    expected = json.loads((REPORTS / "recovery-fail.json").read_text())
+
+    assert build_scenario_report(SCENARIO, _result(two_retry_log)).to_dict() == expected
 
 
 def test_nonzero_exit_produces_fail_report() -> None:
