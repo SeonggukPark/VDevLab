@@ -4,7 +4,7 @@
 > 출품 마감: 2026-08-27
 > 현재 단계: Phase 6 — Recovery Assertion과 Causal JSON Report 구현
 > 현재 브랜치: `issue-1/recovery-report`
-> 다음 실행: stdout·disconnect·kernel warning assertion 구현
+> 다음 실행: Ubuntu VM에서 stdout·disconnect·kernel warning assertion 실동작 검증
 
 ## 체크 규칙
 
@@ -206,8 +206,8 @@
 - [x] PASS·FAIL·ERROR·TIMEOUT 모두 JSON 생성
 - [x] JSON `schema_version` 추가
 - [x] report serialization 단위 테스트
-- [ ] 의도적 PASS report 예제 저장
-- [ ] 의도적 FAIL report 예제 저장
+- [x] 의도적 PASS report 예제 저장
+- [x] 의도적 FAIL report 예제 저장
 - [ ] Assertion/report PR merge
 
 ### Phase 6 Gate
@@ -373,3 +373,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-19 | Phase 5 Merge Gate | GitHub | 76개 테스트, Ubuntu kernel end-to-end, CI 통과 후 Scenario Runner 병합 | PR #7, merge `ae1dd96`, CI run 32223452813 |
 | 2026-08-19 | Phase 6 recovery analysis·timing | Windows·Ubuntu/Python 3 | JSONL event 검증, EIO·retry 횟수, 최초 오류·복구 시각과 latency, event count/within assertion 검증; 절대 monotonic dispatch 시각과 recovery latency 상한 추가; 양 환경 전체 106개 테스트 통과 | Commits `5fbe707`, `7a23e92`, `src/vdevlab/analysis.py` |
 | 2026-08-19 | Phase 6 causal JSON report | Windows·Ubuntu/Python 3 | PASS·FAIL·ERROR·TIMEOUT 분류, schema v1, fault→error→recovery timeline, exit-code assertion, 안정적 JSON serialization과 CLI 파일 출력 검증; 양 환경 전체 118개 테스트 통과 | Commit `5826940`, `src/vdevlab/report.py` |
+| 2026-08-19 | Phase 6 assertion 확장·report 예제 | Windows·Ubuntu/Python 3 | stdout 포함·제외, disconnect, kernel warning assertion 구현과 PASS/FAIL schema 예제 고정; 양 환경 전체 138개 테스트 통과, kernel runtime 대기 | Commits `9239259`, `5dfff58`, PR #8 |
