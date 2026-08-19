@@ -4,7 +4,7 @@
 > 출품 마감: 2026-08-27
 > 현재 단계: Phase 6 — Recovery Assertion과 Causal JSON Report 구현
 > 현재 브랜치: `issue-1/recovery-report`
-> 다음 실행: fault injection timestamp 연결과 recovery latency assertion 구현
+> 다음 실행: causal JSON report model과 serialization 구현
 
 ## 체크 규칙
 
@@ -194,11 +194,11 @@
 
 - [x] observed EIO 횟수 계산
 - [x] application retry 횟수 계산
-- [ ] fault injection timestamp 기록
+- [x] fault injection timestamp 기록
 - [x] first error timestamp 기록
 - [x] recovery timestamp와 latency 계산
 - [x] retry count assertion
-- [ ] recovery latency assertion
+- [x] recovery latency assertion
 - [ ] stdout contains/not-contains assertion
 - [ ] process exit-code assertion
 - [ ] disconnect assertion
@@ -371,4 +371,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-19 | Phase 5 cleanup | Windows/Python 3 | 정상·timeout·dispatch failure·Ctrl+C 경로의 process 종료와 device reset/close 검증; 전체 71개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
 | 2026-08-19 | Phase 5 Ubuntu VM Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | `normal.yaml` end-to-end 실행, MONITOR_STARTED·온도 25/42, exit 0, timeout false, fault none, module·device·process cleanup 확인 | Commit `894649a`, [PR #7 runtime 기록](https://github.com/SeonggukPark/VDevLab/pull/7#issuecomment-5338375659) |
 | 2026-08-19 | Phase 5 Merge Gate | GitHub | 76개 테스트, Ubuntu kernel end-to-end, CI 통과 후 Scenario Runner 병합 | PR #7, merge `ae1dd96`, CI run 32223452813 |
-| 2026-08-19 | Phase 6 recovery log analysis | Windows·Ubuntu/Python 3 | JSONL event 검증, EIO·retry 횟수, 최초 오류·복구 시각과 latency, event count/within assertion 검증; 양 환경 전체 100개 테스트 통과 | Commit `5fbe707`, `src/vdevlab/analysis.py` |
+| 2026-08-19 | Phase 6 recovery analysis·timing | Windows·Ubuntu/Python 3 | JSONL event 검증, EIO·retry 횟수, 최초 오류·복구 시각과 latency, event count/within assertion 검증; 절대 monotonic dispatch 시각과 recovery latency 상한 추가; 전체 106개 로컬 테스트 통과 | Commits `5fbe707` 이후, `src/vdevlab/analysis.py` |

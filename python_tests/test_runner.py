@@ -82,6 +82,12 @@ def test_scheduler_uses_absolute_monotonic_deadlines() -> None:
     )
 
     assert [record.started_ms for record in records] == pytest.approx([0, 100, 250])
+    assert [record.monotonic_started_ms for record in records] == pytest.approx(
+        [100_000, 100_100, 100_250]
+    )
+    assert [record.monotonic_finished_ms for record in records] == pytest.approx(
+        [100_000, 100_100, 100_250]
+    )
     assert clock.sleeps == pytest.approx([0.1, 0.15])
     assert backend.calls == [
         ("reset", None),

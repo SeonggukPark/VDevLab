@@ -69,6 +69,8 @@ class DispatchRecord:
     scheduled_ms: int
     started_ms: float
     finished_ms: float
+    monotonic_started_ms: float
+    monotonic_finished_ms: float
 
 
 @dataclass(frozen=True)
@@ -328,6 +330,8 @@ class ScenarioScheduler:
                     scheduled_ms=scheduled_ms,
                     started_ms=(started - origin) * 1000,
                     finished_ms=(finished - origin) * 1000,
+                    monotonic_started_ms=started * 1000,
+                    monotonic_finished_ms=finished * 1000,
                 )
             )
 

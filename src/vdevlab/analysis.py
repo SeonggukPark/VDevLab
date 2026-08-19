@@ -52,6 +52,13 @@ class RetryAssertion:
 
 
 @dataclass(frozen=True)
+class RecoveryLatencyAssertion:
+    maximum_ms: int
+    observed_ms: int | None
+    passed: bool
+
+
+@dataclass(frozen=True)
 class EventCountAssertion:
     event: str
     expected: int
@@ -189,6 +196,20 @@ def evaluate_retry_count(metrics: RecoveryMetrics, expected: int) -> RetryAssert
         expected=expected_count,
         observed=metrics.application_retry_count,
         passed=metrics.application_retry_count == expected_count,
+    )
+
+
+def evaluate_recovery_latency(
+    metrics: RecoveryMetrics, maximum_ms: int
+) -> RecoveryLatencyAssertion:
+    maximum = _require_nonnegative_integer(
+        maximum_ms, line=0, field="maximum recovery latency"
+    )
+    observed = metrics.recovery_latency_ms
+    return RecoveryLatencyAssertion(
+        maximum_ms=maximum,
+        observed_ms=observed,
+        passed=observed is not None and observed <= maximum,
     )
 
 

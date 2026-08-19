@@ -217,6 +217,45 @@ def test_assertion_window_must_fit_timeout() -> None:
     assert_error(document, r"assertions\[0\].within: must not exceed scenario.timeout")
 
 
+def test_recovery_assertion_normalizes_maximum_latency() -> None:
+    document = deepcopy(VALID_DOCUMENT)
+    document["assertions"] = [
+        {
+            "event": "RECOVERY_SUCCESS",
+            "count": 1,
+            "max_latency": "500ms",
+        }
+    ]
+
+    scenario = parse_document(document)
+
+    assert scenario.assertions[0]["max_latency_ms"] == 500
+
+
+def test_maximum_latency_requires_recovery_event() -> None:
+    document = deepcopy(VALID_DOCUMENT)
+    document["assertions"][0]["max_latency"] = "500ms"
+    assert_error(
+        document,
+        r"assertions\[0\].max_latency: is only valid for RECOVERY_SUCCESS",
+    )
+
+
+def test_maximum_latency_must_fit_timeout() -> None:
+    document = deepcopy(VALID_DOCUMENT)
+    document["assertions"] = [
+        {
+            "event": "RECOVERY_SUCCESS",
+            "count": 1,
+            "max_latency": "6s",
+        }
+    ]
+    assert_error(
+        document,
+        r"assertions\[0\].max_latency: must not exceed scenario.timeout",
+    )
+
+
 def test_invalid_yaml_has_stable_error() -> None:
     with pytest.raises(ScenarioValidationError, match=r"\$: invalid YAML"):
         parse_scenario("[unclosed")

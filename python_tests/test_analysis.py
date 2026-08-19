@@ -8,6 +8,7 @@ from vdevlab.analysis import (
     ApplicationLogError,
     calculate_recovery_metrics,
     evaluate_event_assertions,
+    evaluate_recovery_latency,
     evaluate_retry_count,
     parse_application_log,
 )
@@ -81,6 +82,29 @@ def test_evaluate_retry_count(expected: int, passed: bool) -> None:
     assert assertion.expected == expected
     assert assertion.observed == 3
     assert assertion.passed is passed
+
+
+@pytest.mark.parametrize(
+    ("maximum_ms", "passed"),
+    ((100, True), (99, False)),
+)
+def test_evaluate_recovery_latency(maximum_ms: int, passed: bool) -> None:
+    metrics = calculate_recovery_metrics(parse_application_log(RECOVERY_LOG))
+
+    assertion = evaluate_recovery_latency(metrics, maximum_ms)
+
+    assert assertion.maximum_ms == maximum_ms
+    assert assertion.observed_ms == 100
+    assert assertion.passed is passed
+
+
+def test_evaluate_recovery_latency_fails_without_recovery() -> None:
+    metrics = calculate_recovery_metrics(())
+
+    assertion = evaluate_recovery_latency(metrics, 100)
+
+    assert assertion.observed_ms is None
+    assert assertion.passed is False
 
 
 def test_evaluate_event_assertions_applies_count_and_within_window() -> None:

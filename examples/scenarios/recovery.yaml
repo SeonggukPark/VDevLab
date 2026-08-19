@@ -31,6 +31,7 @@ assertions:
   - event: RECOVERY_SUCCESS
     count: 1
     within: 3s
+    max_latency: 1s
   - event: TEMPERATURE
     count: 1
     within: 3s

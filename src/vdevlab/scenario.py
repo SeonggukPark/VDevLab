@@ -230,7 +230,7 @@ def _parse_assertions(value: Any, timeout_ms: int) -> tuple[Mapping[str, Any], .
         path = f"assertions[{index}]"
         assertion = _mapping(raw_assertion, path)
         _required(assertion, {"event", "count"}, path)
-        _allowed(assertion, {"event", "count", "within"}, path)
+        _allowed(assertion, {"event", "count", "within", "max_latency"}, path)
 
         event = _non_empty_string(assertion["event"], f"{path}.event")
         if event not in _LOG_EVENTS:
@@ -246,6 +246,20 @@ def _parse_assertions(value: Any, timeout_ms: int) -> tuple[Mapping[str, Any], .
                     f"{path}.within", "must not exceed scenario.timeout"
                 )
             normalized["within_ms"] = within_ms
+        if "max_latency" in assertion:
+            if event != "RECOVERY_SUCCESS":
+                raise ScenarioValidationError(
+                    f"{path}.max_latency",
+                    "is only valid for RECOVERY_SUCCESS",
+                )
+            maximum_latency_ms = parse_duration(
+                assertion["max_latency"], f"{path}.max_latency"
+            )
+            if maximum_latency_ms > timeout_ms:
+                raise ScenarioValidationError(
+                    f"{path}.max_latency", "must not exceed scenario.timeout"
+                )
+            normalized["max_latency_ms"] = maximum_latency_ms
         parsed.append(normalized)
 
     return tuple(parsed)

@@ -94,11 +94,13 @@ assertions:
   - event: RECOVERY_SUCCESS
     count: 1
     within: 3s
+    max_latency: 1s
 ```
 
 `event` must be one of the structured events documented for the sample
 monitor. `count` is a positive integer. Optional `within` must not exceed the
-scenario timeout.
+scenario timeout. `max_latency` is available only for `RECOVERY_SUCCESS` and
+limits the time from the first retryable error to the recovery event.
 
 ## Validation
 
