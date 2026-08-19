@@ -88,6 +88,71 @@ class ScenarioRunResult:
     scenario_name: str
     dispatches: tuple[DispatchRecord, ...]
     application: ApplicationResult
+    kernel_warnings: tuple[str, ...] = ()
+    kernel_log_available: bool = False
+    kernel_log_error: str | None = None
+
+
+@dataclass(frozen=True)
+class KernelLogSnapshot:
+    lines: tuple[str, ...]
+    error: str | None = None
+
+
+@dataclass(frozen=True)
+class KernelLogObservation:
+    available: bool
+    warnings: tuple[str, ...]
+    error: str | None = None
+
+
+class DmesgKernelLogCollector:
+    def __init__(
+        self,
+        command_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    ) -> None:
+        self._command_runner = command_runner
+
+    def _read(self) -> KernelLogSnapshot:
+        command = (
+            "dmesg",
+            "--level=warn,err,crit,alert,emerg",
+            "--notime",
+        )
+        try:
+            completed = self._command_runner(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=False,
+            )
+        except OSError as error:
+            return KernelLogSnapshot((), str(error))
+
+        if completed.returncode != 0:
+            message = completed.stderr.strip() or f"dmesg exited with {completed.returncode}"
+            return KernelLogSnapshot((), message)
+        return KernelLogSnapshot(tuple(completed.stdout.splitlines()))
+
+    def snapshot(self) -> KernelLogSnapshot:
+        return self._read()
+
+    def observe(self, before: KernelLogSnapshot) -> KernelLogObservation:
+        if before.error is not None:
+            return KernelLogObservation(False, (), before.error)
+
+        after = self._read()
+        if after.error is not None:
+            return KernelLogObservation(False, (), after.error)
+
+        overlap = min(len(before.lines), len(after.lines))
+        while overlap and before.lines[-overlap:] != after.lines[:overlap]:
+            overlap -= 1
+        return KernelLogObservation(
+            available=True,
+            warnings=after.lines[overlap:],
+        )
 
 
 class DeviceBackend(Protocol):
@@ -98,6 +163,12 @@ class DeviceBackend(Protocol):
     def write(self, data: bytes) -> None: ...
 
     def set_fault(self, configuration: FaultConfiguration) -> None: ...
+
+
+class KernelLogCollector(Protocol):
+    def snapshot(self) -> KernelLogSnapshot: ...
+
+    def observe(self, before: KernelLogSnapshot) -> KernelLogObservation: ...
 
 
 class RunnerError(RuntimeError):
@@ -389,6 +460,7 @@ class ScenarioRunner:
         scheduler: ScenarioScheduler | None = None,
         clock: Callable[[], float] = time.monotonic,
         terminate_grace_ms: int = 1000,
+        kernel_log_collector: KernelLogCollector | None = None,
     ) -> None:
         ApplicationProcess._timeout_seconds(terminate_grace_ms, "terminate_grace_ms")
         self._backend_factory = backend_factory
@@ -396,12 +468,20 @@ class ScenarioRunner:
         self._scheduler = scheduler or ScenarioScheduler(clock=clock)
         self._clock = clock
         self._terminate_grace_ms = terminate_grace_ms
+        self._kernel_log_collector = kernel_log_collector or DmesgKernelLogCollector()
 
     def run(
         self,
         scenario: ScenarioDefinition,
         cwd: str | os.PathLike[str] | None = None,
     ) -> ScenarioRunResult:
+        kernel_log_required = any(
+            assertion.get("type") == "kernel_warnings"
+            for assertion in scenario.assertions
+        )
+        kernel_snapshot = (
+            self._kernel_log_collector.snapshot() if kernel_log_required else None
+        )
         backend = self._backend_factory(scenario.device_path)
         application: ApplicationProcess | None = None
         started = self._clock()
@@ -433,6 +513,14 @@ class ScenarioRunner:
             raise
 
         self._cleanup_backend(backend, suppress_errors=False)
+        if kernel_snapshot is not None:
+            kernel_observation = self._kernel_log_collector.observe(kernel_snapshot)
+            result = replace(
+                result,
+                kernel_warnings=kernel_observation.warnings,
+                kernel_log_available=kernel_observation.available,
+                kernel_log_error=kernel_observation.error,
+            )
         return result
 
     @staticmethod

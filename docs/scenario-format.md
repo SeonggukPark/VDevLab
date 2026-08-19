@@ -102,6 +102,24 @@ monitor. `count` is a positive integer. Optional `within` must not exceed the
 scenario timeout. `max_latency` is available only for `RECOVERY_SUCCESS` and
 limits the time from the first retryable error to the recovery event.
 
+Additional assertion types use an explicit `type` discriminator:
+
+```yaml
+  - type: stdout
+    contains: RECOVERY_SUCCESS
+    not_contains: READ_FAILED
+  - type: disconnect
+    expected: true
+  - type: kernel_warnings
+    count: 0
+```
+
+`stdout` accepts `contains`, `not_contains`, or both. `disconnect` checks for a
+structured `DEVICE_DISCONNECTED` application event. `kernel_warnings` compares
+new warning-or-higher `dmesg` entries recorded during the scenario. A requested
+kernel log assertion produces `ERROR`, not a false pass, when the log cannot be
+read; run these scenarios with sufficient permission to read the kernel log.
+
 ## Validation
 
 Install the package and validate one or more files without accessing the

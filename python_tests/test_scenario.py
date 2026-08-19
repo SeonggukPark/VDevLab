@@ -256,6 +256,50 @@ def test_maximum_latency_must_fit_timeout() -> None:
     )
 
 
+def test_additional_assertion_types_are_normalized() -> None:
+    document = deepcopy(VALID_DOCUMENT)
+    document["assertions"] = [
+        {
+            "type": "stdout",
+            "contains": "RECOVERY_SUCCESS",
+            "not_contains": "READ_FAILED",
+        },
+        {"type": "disconnect", "expected": True},
+        {"type": "kernel_warnings", "count": 0},
+    ]
+
+    scenario = parse_document(document)
+
+    assert scenario.assertions == (
+        {
+            "type": "stdout",
+            "contains": "RECOVERY_SUCCESS",
+            "not_contains": "READ_FAILED",
+        },
+        {"type": "disconnect", "expected": True},
+        {"type": "kernel_warnings", "count": 0},
+    )
+
+
+@pytest.mark.parametrize(
+    ("assertion", "message"),
+    (
+        ({"type": "stdout"}, "requires contains or not_contains"),
+        ({"type": "stdout", "contains": ""}, r"contains: must be"),
+        ({"type": "disconnect", "expected": 1}, r"expected: must be a boolean"),
+        ({"type": "kernel_warnings", "count": -1}, r"count: must be between"),
+        ({"type": "unknown"}, r"type: must be one of"),
+    ),
+)
+def test_additional_assertions_reject_invalid_values(
+    assertion: dict[str, object], message: str
+) -> None:
+    document = deepcopy(VALID_DOCUMENT)
+    document["assertions"] = [assertion]
+
+    assert_error(document, rf"assertions\[0\].*{message}")
+
+
 def test_invalid_yaml_has_stable_error() -> None:
     with pytest.raises(ScenarioValidationError, match=r"\$: invalid YAML"):
         parse_scenario("[unclosed")

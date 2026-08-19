@@ -7,9 +7,12 @@ import pytest
 from vdevlab.analysis import (
     ApplicationLogError,
     calculate_recovery_metrics,
+    evaluate_disconnect,
     evaluate_event_assertions,
+    evaluate_kernel_warnings,
     evaluate_recovery_latency,
     evaluate_retry_count,
+    evaluate_stdout_assertion,
     parse_application_log,
 )
 
@@ -227,3 +230,63 @@ def test_calculate_recovery_metrics_validates_event_fields(text: str) -> None:
 
     with pytest.raises(ApplicationLogError):
         calculate_recovery_metrics(events)
+
+
+def test_evaluate_stdout_contains_and_not_contains() -> None:
+    assertions = evaluate_stdout_assertion(
+        RECOVERY_LOG,
+        {"contains": "RECOVERY_SUCCESS", "not_contains": "READ_FAILED"},
+    )
+
+    assert [(item.operator, item.passed) for item in assertions] == [
+        ("contains", True),
+        ("not_contains", True),
+    ]
+
+
+def test_evaluate_stdout_reports_both_failure_modes() -> None:
+    assertions = evaluate_stdout_assertion(
+        RECOVERY_LOG,
+        {"contains": "READ_FAILED", "not_contains": "RECOVERY_SUCCESS"},
+    )
+
+    assert all(item.passed is False for item in assertions)
+
+
+def test_evaluate_disconnect_uses_structured_event() -> None:
+    disconnected = parse_application_log(
+        '{"timestamp_ms":10,"event":"DEVICE_DISCONNECTED","errno":19}'
+    )
+
+    assert evaluate_disconnect(disconnected, True).passed is True
+    assert evaluate_disconnect((), False).passed is True
+    assert evaluate_disconnect(disconnected, False).passed is False
+
+
+def test_kernel_warning_assertion_requires_observation() -> None:
+    available = evaluate_kernel_warnings(
+        (),
+        0,
+        available=True,
+    )
+    unavailable = evaluate_kernel_warnings(
+        (),
+        0,
+        available=False,
+    )
+
+    assert available.observed == 0
+    assert available.passed is True
+    assert unavailable.observed is None
+    assert unavailable.passed is False
+
+
+def test_kernel_warning_assertion_counts_new_warnings() -> None:
+    assertion = evaluate_kernel_warnings(
+        ("warning one", "warning two"),
+        0,
+        available=True,
+    )
+
+    assert assertion.observed == 2
+    assert assertion.passed is False

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 import json
 from pathlib import Path
 
@@ -17,6 +18,9 @@ from vdevlab.scenario import load_scenario
 
 ROOT = Path(__file__).parents[1]
 SCENARIO = load_scenario(ROOT / "examples" / "scenarios" / "recovery.yaml")
+DISCONNECT_SCENARIO = load_scenario(
+    ROOT / "examples" / "scenarios" / "disconnect.yaml"
+)
 
 PASSING_LOG = """\
 {"timestamp_ms":100000,"event":"MONITOR_STARTED"}
@@ -65,6 +69,7 @@ def _result(
             stderr="",
             timed_out=timed_out,
         ),
+        kernel_log_available=True,
     )
 
 
@@ -92,6 +97,13 @@ def test_build_passing_causal_report() -> None:
                 "reported_retries": 3,
             }
         ],
+        "disconnected": False,
+        "kernel_log": {
+            "available": True,
+            "warning_count": 0,
+            "warnings": [],
+            "error": None,
+        },
     }
     assert all(item["passed"] for item in document["assertions"])
     assert [item["event"] for item in document["timeline"]] == [
@@ -123,6 +135,27 @@ def test_failed_assertion_produces_fail_report() -> None:
     assert failed[0]["observed"] == 2
 
 
+def test_forbidden_stdout_event_produces_fail_report() -> None:
+    stdout = PASSING_LOG + (
+        '{"timestamp_ms":100220,"event":"READ_FAILED","errno":5}\n'
+    )
+
+    report = build_scenario_report(SCENARIO, _result(stdout))
+
+    assert report.status is ReportStatus.FAIL
+    stdout_assertion = next(
+        item
+        for item in report.assertions
+        if item["type"] == "stdout" and item["operator"] == "not_contains"
+    )
+    assert stdout_assertion == {
+        "type": "stdout",
+        "operator": "not_contains",
+        "text": "READ_FAILED",
+        "passed": False,
+    }
+
+
 def test_nonzero_exit_produces_fail_report() -> None:
     report = build_scenario_report(SCENARIO, _result(exit_code=7))
 
@@ -146,6 +179,72 @@ def test_timeout_produces_timeout_report() -> None:
     assert report.status is ReportStatus.TIMEOUT
     assert report.application is not None
     assert report.application["timed_out"] is True
+
+
+def test_unavailable_required_kernel_log_produces_error_report() -> None:
+    result = replace(
+        _result(),
+        kernel_log_available=False,
+        kernel_log_error="Operation not permitted",
+    )
+
+    report = build_scenario_report(SCENARIO, result)
+
+    assert report.status is ReportStatus.ERROR
+    assert report.error == {
+        "type": "KernelLogUnavailable",
+        "message": "Operation not permitted",
+    }
+    kernel_assertion = next(
+        item for item in report.assertions if item["type"] == "kernel_warnings"
+    )
+    assert kernel_assertion["available"] is False
+    assert kernel_assertion["passed"] is False
+
+
+def test_observed_kernel_warning_produces_fail_report() -> None:
+    result = replace(
+        _result(),
+        kernel_warnings=("WARNING: vdevlab test warning",),
+    )
+
+    report = build_scenario_report(SCENARIO, result)
+
+    assert report.status is ReportStatus.FAIL
+    assert report.observations["kernel_log"]["warning_count"] == 1
+
+
+def test_disconnect_assertion_uses_structured_application_event() -> None:
+    stdout = """\
+{"timestamp_ms":100000,"event":"MONITOR_STARTED"}
+{"timestamp_ms":100100,"event":"TEMPERATURE","temperature_c":25.0}
+{"timestamp_ms":100210,"event":"DEVICE_DISCONNECTED","errno":19}
+"""
+    result = ScenarioRunResult(
+        scenario_name=DISCONNECT_SCENARIO.name,
+        dispatches=(
+            _dispatch(0, "reset", 0, 100000.0),
+            _dispatch(1, "write", 100, 100100.0),
+            _dispatch(2, "fault", 200, 100200.0),
+        ),
+        application=ApplicationResult(
+            command=DISCONNECT_SCENARIO.command,
+            exit_code=0,
+            stdout=stdout,
+            stderr="",
+        ),
+        kernel_log_available=True,
+    )
+
+    report = build_scenario_report(DISCONNECT_SCENARIO, result)
+
+    assert report.status is ReportStatus.PASS
+    assert report.observations["disconnected"] is True
+    disconnect_assertion = next(
+        item for item in report.assertions if item["type"] == "disconnect"
+    )
+    assert disconnect_assertion["observed"] is True
+    assert disconnect_assertion["passed"] is True
 
 
 def test_invalid_application_log_produces_error_report() -> None:

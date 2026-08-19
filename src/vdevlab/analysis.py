@@ -67,6 +67,28 @@ class EventCountAssertion:
     passed: bool
 
 
+@dataclass(frozen=True)
+class StdoutAssertion:
+    operator: str
+    text: str
+    passed: bool
+
+
+@dataclass(frozen=True)
+class DisconnectAssertion:
+    expected: bool
+    observed: bool
+    passed: bool
+
+
+@dataclass(frozen=True)
+class KernelWarningAssertion:
+    expected: int
+    observed: int | None
+    available: bool
+    passed: bool
+
+
 def _require_nonnegative_integer(
     value: object, *, line: int, field: str
 ) -> int:
@@ -265,3 +287,61 @@ def evaluate_event_assertions(
         )
 
     return tuple(results)
+
+
+def evaluate_stdout_assertion(
+    stdout: str,
+    definition: Mapping[str, Any],
+) -> tuple[StdoutAssertion, ...]:
+    results: list[StdoutAssertion] = []
+    contains = definition.get("contains")
+    if isinstance(contains, str):
+        results.append(
+            StdoutAssertion(
+                operator="contains",
+                text=contains,
+                passed=contains in stdout,
+            )
+        )
+    not_contains = definition.get("not_contains")
+    if isinstance(not_contains, str):
+        results.append(
+            StdoutAssertion(
+                operator="not_contains",
+                text=not_contains,
+                passed=not_contains not in stdout,
+            )
+        )
+    if not results:
+        raise ValueError("stdout assertion requires contains or not_contains")
+    return tuple(results)
+
+
+def evaluate_disconnect(
+    events: Sequence[ApplicationLogEvent], expected: bool
+) -> DisconnectAssertion:
+    if not isinstance(expected, bool):
+        raise ValueError("disconnect expected value must be a boolean")
+    observed = any(event.event == "DEVICE_DISCONNECTED" for event in events)
+    return DisconnectAssertion(
+        expected=expected,
+        observed=observed,
+        passed=observed is expected,
+    )
+
+
+def evaluate_kernel_warnings(
+    warnings: Sequence[str],
+    expected: int,
+    *,
+    available: bool,
+) -> KernelWarningAssertion:
+    if isinstance(expected, bool) or not isinstance(expected, int) or expected < 0:
+        raise ValueError("kernel warning count must be a non-negative integer")
+    observed = len(warnings) if available else None
+    return KernelWarningAssertion(
+        expected=expected,
+        observed=observed,
+        available=available,
+        passed=available and observed == expected,
+    )

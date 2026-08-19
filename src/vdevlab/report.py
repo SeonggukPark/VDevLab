@@ -11,8 +11,11 @@ from .analysis import (
     ApplicationLogError,
     ApplicationLogEvent,
     calculate_recovery_metrics,
+    evaluate_disconnect,
     evaluate_event_assertions,
+    evaluate_kernel_warnings,
     evaluate_recovery_latency,
+    evaluate_stdout_assertion,
     parse_application_log,
 )
 from .runner import DispatchRecord, ScenarioRunResult
@@ -165,11 +168,45 @@ def build_scenario_report(
             error={"type": type(error).__name__, "message": str(error)},
         )
 
-    event_assertions = evaluate_event_assertions(events, scenario.assertions)
+    event_definitions = tuple(
+        definition
+        for definition in scenario.assertions
+        if definition.get("type", "event_count") == "event_count"
+    )
+    event_assertions = evaluate_event_assertions(events, event_definitions)
     assertion_documents: list[Mapping[str, Any]] = [
         {"type": "event_count", **asdict(assertion)}
         for assertion in event_assertions
     ]
+    for definition in scenario.assertions:
+        assertion_type = definition.get("type")
+        if assertion_type == "stdout":
+            assertion_documents.extend(
+                {"type": "stdout", **asdict(assertion)}
+                for assertion in evaluate_stdout_assertion(
+                    result.application.stdout, definition
+                )
+            )
+        elif assertion_type == "disconnect":
+            assertion_documents.append(
+                {
+                    "type": "disconnect",
+                    **asdict(evaluate_disconnect(events, definition["expected"])),
+                }
+            )
+        elif assertion_type == "kernel_warnings":
+            assertion_documents.append(
+                {
+                    "type": "kernel_warnings",
+                    **asdict(
+                        evaluate_kernel_warnings(
+                            result.kernel_warnings,
+                            definition["count"],
+                            available=result.kernel_log_available,
+                        )
+                    ),
+                }
+            )
     assertion_documents.append(
         {
             "type": "process_exit_code",
@@ -203,12 +240,34 @@ def build_scenario_report(
             metrics.recovery_timestamp_ms, fault_timestamp_ms
         ),
         "recoveries": [asdict(window) for window in metrics.recoveries],
+        "disconnected": any(
+            event.event == "DEVICE_DISCONNECTED" for event in events
+        ),
+        "kernel_log": {
+            "available": result.kernel_log_available,
+            "warning_count": len(result.kernel_warnings)
+            if result.kernel_log_available
+            else None,
+            "warnings": list(result.kernel_warnings),
+            "error": result.kernel_log_error,
+        },
     }
 
     assertions_passed = all(
         bool(assertion["passed"]) for assertion in assertion_documents
     )
-    if result.application.timed_out:
+    kernel_log_required = any(
+        definition.get("type") == "kernel_warnings"
+        for definition in scenario.assertions
+    )
+    report_error: Mapping[str, str] | None = None
+    if kernel_log_required and not result.kernel_log_available:
+        status = ReportStatus.ERROR
+        report_error = {
+            "type": "KernelLogUnavailable",
+            "message": result.kernel_log_error or "kernel log is unavailable",
+        }
+    elif result.application.timed_out:
         status = ReportStatus.TIMEOUT
     elif not assertions_passed:
         status = ReportStatus.FAIL
@@ -224,6 +283,7 @@ def build_scenario_report(
         timeline=_sorted_timeline(
             [*dispatch_timeline, *_application_timeline(events)]
         ),
+        error=report_error,
     )
 
 

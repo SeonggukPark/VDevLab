@@ -35,3 +35,8 @@ assertions:
   - event: TEMPERATURE
     count: 1
     within: 3s
+  - type: stdout
+    contains: RECOVERY_SUCCESS
+    not_contains: READ_FAILED
+  - type: kernel_warnings
+    count: 0
