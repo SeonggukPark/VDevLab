@@ -21,6 +21,7 @@ from vdevlab.runner import (
     FaultConfiguration,
     LinuxDeviceBackend,
     RunnerError,
+    ScenarioRunner,
     ScenarioScheduler,
 )
 from vdevlab.scenario import load_scenario
@@ -522,3 +523,73 @@ def test_application_process_rejects_invalid_timeouts(
             getattr(process, method)(value)
     finally:
         process.collect()
+
+
+class FakeApplication:
+    def __init__(self, result: object) -> None:
+        self.result = result
+        self.terminated = 0
+        self.running = True
+
+    def poll(self) -> int | None:
+        return None if self.running else 0
+
+    def collect_with_timeout(self, timeout_ms: int, grace_ms: int) -> object:
+        self.running = False
+        return self.result
+
+    def terminate(self, grace_ms: int) -> object:
+        self.terminated += 1
+        self.running = False
+        return self.result
+
+
+def test_scenario_runner_cleans_backend_after_success() -> None:
+    scenario = load_scenario(Path(__file__).parents[1] / "examples/scenarios/normal.yaml")
+    backend = FakeBackend()
+    backend.closed = False
+    backend.close = lambda: setattr(backend, "closed", True)
+    expected = ApplicationProcess((sys.executable, "-c", "print('done')")).collect()
+    application = FakeApplication(expected)
+
+    runner = ScenarioRunner(
+        backend_factory=lambda path: backend,
+        application_factory=lambda command, cwd=None: application,
+        scheduler=ScenarioScheduler(FakeClock().monotonic, lambda duration: None),
+        clock=lambda: 100.0,
+    )
+    result = runner.run(scenario)
+
+    assert result.scenario_name == "normal-temperature-flow"
+    assert result.application == expected
+    assert backend.calls[-1] == ("reset", None)
+    assert backend.closed is True
+
+
+@pytest.mark.parametrize("failure", (OSError("dispatch failed"), KeyboardInterrupt()))
+def test_scenario_runner_terminates_and_cleans_on_dispatch_failure(
+    failure: BaseException,
+) -> None:
+    scenario = load_scenario(Path(__file__).parents[1] / "examples/scenarios/normal.yaml")
+    backend = FakeBackend()
+    backend.closed = False
+    backend.close = lambda: setattr(backend, "closed", True)
+    expected = ApplicationProcess((sys.executable, "-c", "pass")).collect()
+    application = FakeApplication(expected)
+
+    class FailingScheduler:
+        def run(self, events: object, selected_backend: object) -> tuple[()]:
+            raise failure
+
+    runner = ScenarioRunner(
+        backend_factory=lambda path: backend,
+        application_factory=lambda command, cwd=None: application,
+        scheduler=FailingScheduler(),  # type: ignore[arg-type]
+    )
+
+    with pytest.raises(type(failure)):
+        runner.run(scenario)
+
+    assert application.terminated == 1
+    assert backend.calls == [("reset", None)]
+    assert backend.closed is True

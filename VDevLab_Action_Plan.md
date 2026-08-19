@@ -4,7 +4,7 @@
 > 출품 마감: 2026-08-27
 > 현재 단계: Phase 5 — Scenario Runner 구현
 > 현재 브랜치: `issue-1/scenario-runner`
-> 다음 실행: Ctrl+C·dispatch failure·모든 종료 경로 cleanup 구현
+> 다음 실행: `vdevlab run` CLI와 실제 `normal.yaml` end-to-end 실행
 
 ## 체크 규칙
 
@@ -177,10 +177,10 @@
 - [x] stdout/stderr 동시 캡처
 - [x] process exit code 수집
 - [x] 전체 timeout
-- [ ] Ctrl+C cleanup
-- [ ] dispatch failure cleanup
+- [x] Ctrl+C cleanup
+- [x] dispatch failure cleanup
 - [x] timeout process 종료와 강제 종료 fallback
-- [ ] 모든 종료 경로에서 fault clear/reset
+- [x] 모든 종료 경로에서 fault clear/reset
 - [x] scheduler와 fake backend 단위 테스트
 - [ ] Runner PR merge
 
@@ -368,3 +368,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-18 | Phase 5 scheduler/backend | Windows/Python 3 | absolute monotonic deadline, 지연 누적 방지, YAML 순서, fault dispatch, ioctl 구조체, 부분 write·EINTR·close 검증; 전체 54개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
 | 2026-08-19 | Phase 5 application process | Windows/Python 3 | process group, stdout/stderr 병렬 drain, 대용량 출력, UTF-8 replacement, 종료 코드 수집 검증; 전체 62개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
 | 2026-08-19 | Phase 5 timeout | Windows/Python 3 | timeout 감지, 정상 종료 유예, process group 강제 종료 fallback, TIMEOUT 결과 플래그 검증; 전체 68개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
+| 2026-08-19 | Phase 5 cleanup | Windows/Python 3 | 정상·timeout·dispatch failure·Ctrl+C 경로의 process 종료와 device reset/close 검증; 전체 71개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |

@@ -13,6 +13,8 @@ import threading
 import time
 from typing import Any, Protocol
 
+from .scenario import ScenarioDefinition
+
 try:
     from fcntl import ioctl as _system_ioctl
 except ImportError:
@@ -77,6 +79,13 @@ class ApplicationResult:
     stderr: str
     timed_out: bool = False
     forced: bool = False
+
+
+@dataclass(frozen=True)
+class ScenarioRunResult:
+    scenario_name: str
+    dispatches: tuple[DispatchRecord, ...]
+    application: ApplicationResult
 
 
 class DeviceBackend(Protocol):
@@ -366,3 +375,75 @@ class ScenarioScheduler:
         if fault_type == "disconnect":
             return FaultConfiguration(fault_type=fault_type)
         raise RunnerError(f"unsupported fault type: {fault_type}")
+
+
+class ScenarioRunner:
+    def __init__(
+        self,
+        backend_factory: Callable[[str], DeviceBackend] = LinuxDeviceBackend,
+        application_factory: Callable[..., ApplicationProcess] = ApplicationProcess,
+        scheduler: ScenarioScheduler | None = None,
+        clock: Callable[[], float] = time.monotonic,
+        terminate_grace_ms: int = 1000,
+    ) -> None:
+        ApplicationProcess._timeout_seconds(terminate_grace_ms, "terminate_grace_ms")
+        self._backend_factory = backend_factory
+        self._application_factory = application_factory
+        self._scheduler = scheduler or ScenarioScheduler(clock=clock)
+        self._clock = clock
+        self._terminate_grace_ms = terminate_grace_ms
+
+    def run(
+        self,
+        scenario: ScenarioDefinition,
+        cwd: str | os.PathLike[str] | None = None,
+    ) -> ScenarioRunResult:
+        backend = self._backend_factory(scenario.device_path)
+        application: ApplicationProcess | None = None
+        started = self._clock()
+
+        try:
+            application = self._application_factory(scenario.command, cwd=cwd)
+            dispatches = self._scheduler.run(scenario.events, backend)
+            elapsed_ms = int((self._clock() - started) * 1000)
+            remaining_ms = scenario.timeout_ms - elapsed_ms
+            if remaining_ms <= 0:
+                application_result = replace(
+                    application.terminate(self._terminate_grace_ms),
+                    timed_out=True,
+                )
+            else:
+                application_result = application.collect_with_timeout(
+                    remaining_ms,
+                    self._terminate_grace_ms,
+                )
+            result = ScenarioRunResult(
+                scenario_name=scenario.name,
+                dispatches=dispatches,
+                application=application_result,
+            )
+        except BaseException:
+            if application is not None and application.poll() is None:
+                application.terminate(self._terminate_grace_ms)
+            self._cleanup_backend(backend, suppress_errors=True)
+            raise
+
+        self._cleanup_backend(backend, suppress_errors=False)
+        return result
+
+    @staticmethod
+    def _cleanup_backend(backend: DeviceBackend, suppress_errors: bool) -> None:
+        errors: list[BaseException] = []
+        try:
+            backend.reset()
+        except BaseException as error:
+            errors.append(error)
+        try:
+            close = getattr(backend, "close", None)
+            if close is not None:
+                close()
+        except BaseException as error:
+            errors.append(error)
+
+        if errors and not suppress_errors:
+            raise RunnerError("failed to reset and close device backend") from errors[0]

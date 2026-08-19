@@ -10,6 +10,8 @@ from .runner import (
     FaultConfiguration,
     LinuxDeviceBackend,
     RunnerError,
+    ScenarioRunner,
+    ScenarioRunResult,
     ScenarioScheduler,
 )
 
@@ -26,6 +28,8 @@ __all__ = [
     "FaultConfiguration",
     "LinuxDeviceBackend",
     "RunnerError",
+    "ScenarioRunner",
+    "ScenarioRunResult",
     "load_scenario",
 ]
 __version__ = "0.1.0"
