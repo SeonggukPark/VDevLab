@@ -221,13 +221,13 @@
 - [x] `examples/scenarios/normal.yaml`
 - [x] `examples/scenarios/recovery.yaml`
 - [x] `examples/scenarios/disconnect.yaml`
-- [ ] `scripts/setup.sh`
+- [x] `scripts/setup.sh`
 - [ ] `scripts/load.sh`
 - [ ] `scripts/unload.sh`
 - [ ] `scripts/demo.sh`
 - [ ] demo 실패 경로 cleanup trap
 - [x] GitHub Actions kernel/userspace compile 통과
-- [ ] GitHub Actions 사용자 공간 단위 테스트 통과
+- [x] GitHub Actions 사용자 공간 단위 테스트 통과
 - [ ] CI badge
 - [ ] `sudo ./scripts/demo.sh` 5회 연속 실행
 - [ ] 종료 후 test process 0
@@ -374,3 +374,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-19 | Phase 6 recovery analysis·timing | Windows·Ubuntu/Python 3 | JSONL event 검증, EIO·retry 횟수, 최초 오류·복구 시각과 latency, event count/within assertion 검증; 절대 monotonic dispatch 시각과 recovery latency 상한 추가; 양 환경 전체 106개 테스트 통과 | Commits `5fbe707`, `7a23e92`, `src/vdevlab/analysis.py` |
 | 2026-08-19 | Phase 6 causal JSON report | Windows·Ubuntu/Python 3 | PASS·FAIL·ERROR·TIMEOUT 분류, schema v1, fault→error→recovery timeline, exit-code assertion, 안정적 JSON serialization과 CLI 파일 출력 검증; 양 환경 전체 118개 테스트 통과 | Commit `5826940`, `src/vdevlab/report.py` |
 | 2026-08-19 | Phase 6 assertion 확장·report 예제 | Windows·Ubuntu/Python 3 | stdout 포함·제외, disconnect, kernel warning assertion 구현과 PASS/FAIL schema 예제 고정; 양 환경 전체 138개 테스트 통과, kernel runtime 대기 | Commits `9239259`, `5dfff58`, PR #8 |
+| 2026-08-19 | Phase 7 setup·CI | Ubuntu VM·GitHub Actions | setup 한 번으로 venv 설치, 138개 테스트, YAML 3종 검증, kernel/userspace build 통과; 신규 스크립트 Bash 구문과 CI clean target 통과 | Commit `03b42e0`, CI run 32259081736, PR #8 |
