@@ -2,6 +2,8 @@
 
 from .scenario import ScenarioDefinition, ScenarioError, ScenarioValidationError, load_scenario
 from .runner import (
+    ApplicationProcess,
+    ApplicationResult,
     DispatchRecord,
     EventDispatchError,
     FaultConfiguration,
@@ -11,6 +13,8 @@ from .runner import (
 )
 
 __all__ = [
+    "ApplicationProcess",
+    "ApplicationResult",
     "ScenarioDefinition",
     "ScenarioScheduler",
     "ScenarioError",

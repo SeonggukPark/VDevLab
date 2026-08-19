@@ -4,12 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import errno
+import os
 from pathlib import Path
 import struct
+import subprocess
+import sys
 
 import pytest
 
 from vdevlab.runner import (
+    ApplicationProcess,
     EventDispatchError,
     FaultConfiguration,
     LinuxDeviceBackend,
@@ -320,3 +324,102 @@ def test_linux_backend_rejects_operations_after_close(
 
     with pytest.raises(RunnerError, match="closed"):
         backend.reset()
+
+
+def test_application_process_captures_both_streams_and_exit_code() -> None:
+    script = (
+        "import sys; "
+        "print('temperature=42', flush=True); "
+        "print('diagnostic', file=sys.stderr, flush=True); "
+        "raise SystemExit(7)"
+    )
+
+    process = ApplicationProcess((sys.executable, "-c", script))
+    result = process.collect()
+
+    assert result.command == (sys.executable, "-c", script)
+    assert result.exit_code == 7
+    assert result.stdout.splitlines() == ["temperature=42"]
+    assert result.stderr.splitlines() == ["diagnostic"]
+    assert process.poll() == 7
+
+
+def test_application_process_drains_large_stdout_and_stderr() -> None:
+    size = 256 * 1024
+    script = (
+        "import sys; "
+        f"sys.stdout.write('O' * {size}); sys.stdout.flush(); "
+        f"sys.stderr.write('E' * {size}); sys.stderr.flush()"
+    )
+
+    result = ApplicationProcess((sys.executable, "-c", script)).collect()
+
+    assert result.exit_code == 0
+    assert result.stdout == "O" * size
+    assert result.stderr == "E" * size
+
+
+def test_application_process_decodes_invalid_utf8_with_replacement() -> None:
+    script = "import os; os.write(1, bytes([0xff])); os.write(2, bytes([0xfe]))"
+
+    result = ApplicationProcess((sys.executable, "-c", script)).collect()
+
+    assert result.stdout == "\ufffd"
+    assert result.stderr == "\ufffd"
+
+
+def test_application_process_creates_platform_process_group(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    options: dict[str, object] = {}
+
+    class StubProcess:
+        pid = 101
+        returncode = 0
+
+        def communicate(self) -> tuple[bytes, bytes]:
+            return b"out", b"err"
+
+        def poll(self) -> int:
+            return 0
+
+    def fake_popen(command: tuple[str, ...], **kwargs: object) -> StubProcess:
+        options.update(kwargs)
+        return StubProcess()
+
+    monkeypatch.setattr("vdevlab.runner.subprocess.Popen", fake_popen)
+
+    process = ApplicationProcess(("program", "argument"), cwd="workdir")
+    result = process.collect()
+
+    assert process.pid == 101
+    assert result.stdout == "out"
+    assert result.stderr == "err"
+    assert options["cwd"] == "workdir"
+    assert options["stdin"] is subprocess.DEVNULL
+    assert options["stdout"] is subprocess.PIPE
+    assert options["stderr"] is subprocess.PIPE
+    if os.name == "nt":
+        assert options["creationflags"] == subprocess.CREATE_NEW_PROCESS_GROUP
+        assert "start_new_session" not in options
+    else:
+        assert options["start_new_session"] is True
+        assert "creationflags" not in options
+
+
+def test_application_process_collect_is_repeatable() -> None:
+    process = ApplicationProcess((sys.executable, "-c", "print('once')"))
+
+    first = process.collect()
+    second = process.collect()
+
+    assert first == second
+
+
+@pytest.mark.parametrize(
+    "command",
+    ((), ("",), ("program", "")),
+)
+def test_application_process_rejects_invalid_command(command: tuple[str, ...]) -> None:
+    with pytest.raises(RunnerError, match="non-empty strings"):
+        ApplicationProcess(command)

@@ -7,6 +7,8 @@ from dataclasses import dataclass
 import errno
 import os
 import struct
+import subprocess
+import threading
 import time
 from typing import Any, Protocol
 
@@ -66,6 +68,14 @@ class DispatchRecord:
     finished_ms: float
 
 
+@dataclass(frozen=True)
+class ApplicationResult:
+    command: tuple[str, ...]
+    exit_code: int
+    stdout: str
+    stderr: str
+
+
 class DeviceBackend(Protocol):
     def reset(self) -> None: ...
 
@@ -86,6 +96,66 @@ class EventDispatchError(RunnerError):
         self.action = action
         self.cause = cause
         super().__init__(f"event {index} ({action}) failed: {cause}")
+
+
+class ApplicationProcess:
+    def __init__(
+        self,
+        command: Sequence[str],
+        cwd: str | os.PathLike[str] | None = None,
+    ) -> None:
+        if not command or any(not isinstance(argument, str) or not argument for argument in command):
+            raise RunnerError("application command must contain non-empty strings")
+
+        self.command = tuple(command)
+        options: dict[str, Any] = {
+            "cwd": cwd,
+            "stdin": subprocess.DEVNULL,
+            "stdout": subprocess.PIPE,
+            "stderr": subprocess.PIPE,
+        }
+        if os.name == "nt":
+            options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        else:
+            options["start_new_session"] = True
+
+        self._process = subprocess.Popen(self.command, **options)
+        self._output: tuple[bytes, bytes] | None = None
+        self._collector_error: BaseException | None = None
+        self._collector = threading.Thread(
+            target=self._collect_output,
+            name="vdevlab-output-collector",
+            daemon=True,
+        )
+        self._collector.start()
+
+    @property
+    def pid(self) -> int:
+        return self._process.pid
+
+    def poll(self) -> int | None:
+        return self._process.poll()
+
+    def collect(self) -> ApplicationResult:
+        self._collector.join()
+        if self._collector_error is not None:
+            raise RunnerError("failed to collect application output") from self._collector_error
+        if self._output is None or self._process.returncode is None:
+            raise RunnerError("application output collector ended without a result")
+
+        stdout, stderr = self._output
+        return ApplicationResult(
+            command=self.command,
+            exit_code=self._process.returncode,
+            stdout=stdout.decode("utf-8", errors="replace"),
+            stderr=stderr.decode("utf-8", errors="replace"),
+        )
+
+    def _collect_output(self) -> None:
+        try:
+            self._output = self._process.communicate()
+        except BaseException as error:
+            self._collector_error = error
 
 
 class LinuxDeviceBackend:
