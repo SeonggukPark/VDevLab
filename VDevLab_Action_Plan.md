@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-19
 > 출품 마감: 2026-08-27
-> 현재 단계: Phase 5 — Scenario Runner 구현
+> 현재 단계: Phase 6 — Recovery Assertion과 Causal JSON Report 구현
 > 현재 브랜치: `issue-1/scenario-runner`
-> 다음 실행: `vdevlab run` CLI와 실제 `normal.yaml` end-to-end 실행
+> 다음 실행: application log event parser와 retry count assertion 구현
 
 ## 체크 규칙
 
@@ -186,7 +186,7 @@
 
 ### Phase 5 Gate
 
-- [ ] 실제 `normal.yaml`이 runner를 통해 처음부터 끝까지 실행됨
+- [x] 실제 `normal.yaml`이 runner를 통해 처음부터 끝까지 실행됨
 
 ---
 
@@ -369,3 +369,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-19 | Phase 5 application process | Windows/Python 3 | process group, stdout/stderr 병렬 drain, 대용량 출력, UTF-8 replacement, 종료 코드 수집 검증; 전체 62개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
 | 2026-08-19 | Phase 5 timeout | Windows/Python 3 | timeout 감지, 정상 종료 유예, process group 강제 종료 fallback, TIMEOUT 결과 플래그 검증; 전체 68개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
 | 2026-08-19 | Phase 5 cleanup | Windows/Python 3 | 정상·timeout·dispatch failure·Ctrl+C 경로의 process 종료와 device reset/close 검증; 전체 71개 테스트 통과 | `issue-1/scenario-runner`, `python_tests/test_runner.py` |
+| 2026-08-19 | Phase 5 Ubuntu VM Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | `normal.yaml` end-to-end 실행, MONITOR_STARTED·온도 25/42, exit 0, timeout false, fault none, module·device·process cleanup 확인 | Commit `894649a`, [PR #7 runtime 기록](https://github.com/SeonggukPark/VDevLab/pull/7#issuecomment-5338375659) |
