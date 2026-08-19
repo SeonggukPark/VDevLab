@@ -4,6 +4,7 @@ from .scenario import ScenarioDefinition, ScenarioError, ScenarioValidationError
 from .runner import (
     ApplicationProcess,
     ApplicationResult,
+    ApplicationTimeoutError,
     DispatchRecord,
     EventDispatchError,
     FaultConfiguration,
@@ -15,6 +16,7 @@ from .runner import (
 __all__ = [
     "ApplicationProcess",
     "ApplicationResult",
+    "ApplicationTimeoutError",
     "ScenarioDefinition",
     "ScenarioScheduler",
     "ScenarioError",

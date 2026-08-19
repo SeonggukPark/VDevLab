@@ -6,14 +6,17 @@ from collections.abc import Callable
 import errno
 import os
 from pathlib import Path
+import signal
 import struct
 import subprocess
 import sys
+import threading
 
 import pytest
 
 from vdevlab.runner import (
     ApplicationProcess,
+    ApplicationTimeoutError,
     EventDispatchError,
     FaultConfiguration,
     LinuxDeviceBackend,
@@ -423,3 +426,99 @@ def test_application_process_collect_is_repeatable() -> None:
 def test_application_process_rejects_invalid_command(command: tuple[str, ...]) -> None:
     with pytest.raises(RunnerError, match="non-empty strings"):
         ApplicationProcess(command)
+
+
+def test_application_process_collect_reports_timeout() -> None:
+    process = ApplicationProcess((sys.executable, "-c", "import time; time.sleep(30)"))
+
+    try:
+        with pytest.raises(ApplicationTimeoutError) as captured:
+            process.collect(timeout_ms=25)
+
+        assert captured.value.command == (sys.executable, "-c", "import time; time.sleep(30)")
+        assert captured.value.timeout_ms == 25
+    finally:
+        process.terminate(grace_ms=100)
+
+
+def test_application_process_timeout_terminates_process() -> None:
+    process = ApplicationProcess((sys.executable, "-c", "import time; time.sleep(30)"))
+
+    result = process.collect_with_timeout(timeout_ms=25, terminate_grace_ms=1000)
+
+    assert result.timed_out is True
+    assert result.forced is False
+    assert result.exit_code != 0
+    assert process.poll() is not None
+
+
+def test_application_process_forces_kill_after_grace_period(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    released = threading.Event()
+    signals: list[object] = []
+
+    class StubbornProcess:
+        pid = 211
+        returncode: int | None = None
+
+        def communicate(self) -> tuple[bytes, bytes]:
+            released.wait(2)
+            return b"partial-out", b"partial-err"
+
+        def poll(self) -> int | None:
+            return self.returncode
+
+        def terminate(self) -> None:
+            signals.append("terminate")
+
+        def kill(self) -> None:
+            signals.append("kill")
+            self.returncode = 9
+            released.set()
+
+    process_stub = StubbornProcess()
+    monkeypatch.setattr("vdevlab.runner.subprocess.Popen", lambda *args, **kwargs: process_stub)
+
+    if os.name == "nt":
+        expected_signals: list[object] = ["terminate", "kill"]
+    else:
+        def fake_killpg(pid: int, sent_signal: signal.Signals) -> None:
+            signals.append(sent_signal)
+            if sent_signal == signal.SIGKILL:
+                process_stub.returncode = -int(signal.SIGKILL)
+                released.set()
+
+        monkeypatch.setattr("vdevlab.runner.os.killpg", fake_killpg)
+        expected_signals = [signal.SIGTERM, signal.SIGKILL]
+
+    process = ApplicationProcess(("stubborn",))
+    result = process.collect_with_timeout(timeout_ms=10, terminate_grace_ms=10)
+
+    assert signals == expected_signals
+    assert result.timed_out is True
+    assert result.forced is True
+    assert result.stdout == "partial-out"
+    assert result.stderr == "partial-err"
+
+
+@pytest.mark.parametrize(
+    ("method", "value", "message"),
+    (
+        ("collect", 0, "timeout_ms"),
+        ("collect", True, "timeout_ms"),
+        ("terminate", -1, "grace_ms"),
+    ),
+)
+def test_application_process_rejects_invalid_timeouts(
+    method: str,
+    value: int,
+    message: str,
+) -> None:
+    process = ApplicationProcess((sys.executable, "-c", "pass"))
+
+    try:
+        with pytest.raises(RunnerError, match=message):
+            getattr(process, method)(value)
+    finally:
+        process.collect()

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import errno
 import os
+import signal
 import struct
 import subprocess
 import threading
@@ -74,6 +75,8 @@ class ApplicationResult:
     exit_code: int
     stdout: str
     stderr: str
+    timed_out: bool = False
+    forced: bool = False
 
 
 class DeviceBackend(Protocol):
@@ -96,6 +99,13 @@ class EventDispatchError(RunnerError):
         self.action = action
         self.cause = cause
         super().__init__(f"event {index} ({action}) failed: {cause}")
+
+
+class ApplicationTimeoutError(RunnerError):
+    def __init__(self, command: Sequence[str], timeout_ms: int) -> None:
+        self.command = tuple(command)
+        self.timeout_ms = timeout_ms
+        super().__init__(f"application exceeded timeout of {timeout_ms}ms")
 
 
 class ApplicationProcess:
@@ -136,8 +146,39 @@ class ApplicationProcess:
     def poll(self) -> int | None:
         return self._process.poll()
 
-    def collect(self) -> ApplicationResult:
-        self._collector.join()
+    def collect(self, timeout_ms: int | None = None) -> ApplicationResult:
+        timeout_seconds = self._timeout_seconds(timeout_ms, "timeout_ms")
+        self._collector.join(timeout_seconds)
+        if self._collector.is_alive():
+            assert timeout_ms is not None
+            raise ApplicationTimeoutError(self.command, timeout_ms)
+        return self._result()
+
+    def collect_with_timeout(
+        self,
+        timeout_ms: int,
+        terminate_grace_ms: int = 1000,
+    ) -> ApplicationResult:
+        try:
+            return self.collect(timeout_ms)
+        except ApplicationTimeoutError:
+            result = self.terminate(terminate_grace_ms)
+            return replace(result, timed_out=True)
+
+    def terminate(self, grace_ms: int = 1000) -> ApplicationResult:
+        grace_seconds = self._timeout_seconds(grace_ms, "grace_ms")
+        if self.poll() is not None:
+            return self.collect()
+
+        self._signal_group(force=False)
+        self._collector.join(grace_seconds)
+        forced = self._collector.is_alive()
+        if forced:
+            self._signal_group(force=True)
+        result = self.collect()
+        return replace(result, forced=forced)
+
+    def _result(self) -> ApplicationResult:
         if self._collector_error is not None:
             raise RunnerError("failed to collect application output") from self._collector_error
         if self._output is None or self._process.returncode is None:
@@ -150,6 +191,26 @@ class ApplicationProcess:
             stdout=stdout.decode("utf-8", errors="replace"),
             stderr=stderr.decode("utf-8", errors="replace"),
         )
+
+    def _signal_group(self, force: bool) -> None:
+        try:
+            if os.name == "nt":
+                if force:
+                    self._process.kill()
+                else:
+                    self._process.terminate()
+            else:
+                os.killpg(self.pid, signal.SIGKILL if force else signal.SIGTERM)
+        except ProcessLookupError:
+            return
+
+    @staticmethod
+    def _timeout_seconds(value: int | None, name: str) -> float | None:
+        if value is None:
+            return None
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise RunnerError(f"{name} must be a positive integer")
+        return value / 1000
 
     def _collect_output(self) -> None:
         try:
