@@ -4,7 +4,7 @@
 > 출품 마감: 2026-08-27
 > 현재 단계: Phase 7 Gate 완료 — Issue #2 재현 가능한 실행 환경
 > 현재 브랜치: `issue-2/reproducible-environment`
-> 다음 실행: README 기준 fresh clone 재현 검증
+> 다음 실행: README 기준 fresh clone 전체 demo runtime 검증
 
 ## 체크 규칙
 
@@ -259,7 +259,7 @@
 - [ ] scenario/report versioning 정책
 - [ ] 외부 contributor용 사용자 공간 test 절차
 - [ ] GitHub Milestone과 Issue #1~#5 상태 갱신
-- [ ] Public 저장소 비로그인 clone 확인
+- [x] Public 저장소 비로그인 clone 확인
 
 ### Phase 8 Gate
 
@@ -377,3 +377,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-19 | Phase 7 setup·CI | Ubuntu VM·GitHub Actions | setup 한 번으로 venv 설치, 138개 테스트, YAML 3종 검증, kernel/userspace build 통과; 신규 스크립트 Bash 구문과 CI clean target 통과 | Commit `03b42e0`, CI run 32259081736, PR #8 |
 | 2026-08-19 | Phase 6·7 runtime Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | 초기 TIMEOUT과 sub-ms 인과 순서 문제 발견·수정; demo 5회 연속, recovery/disconnect report 각 5개 PASS, kernel warning 0건, causal order 정상, fault·process·module·device cleanup 확인 | Commit `f290314`, VM `logs/demo-gate-20260819T135349Z-{1..5}.log`, PR #8 |
 | 2026-08-19 | Phase 6·7 Merge Gate | GitHub | causal report, assertions, one-command demo, Ubuntu runtime 증거와 CI 통과 후 main 병합; Issue #1 완료 처리 | PR #8, merge `aa00587`, CI run 32260935437 |
+| 2026-08-19 | Issue #2 clean clone setup | VMware Ubuntu 22.04 | 공개 HTTPS 비인증 clone 후 README setup 실행; 139개 테스트, YAML 3종, kernel/userspace build 통과, 생성물 ignore와 clean worktree 확인 | Commit `af63495`, PR #9, `/tmp/vdevlab-clean.gH6TYx` 임시 검증 후 제거 |
