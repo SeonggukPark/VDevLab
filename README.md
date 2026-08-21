@@ -109,3 +109,31 @@ The unload script is idempotent and can also be used as a manual cleanup step.
 - `python_tests/`: parser, scheduler, process, assertion, report, and CLI tests
 - `scripts/`: setup, module lifecycle, smoke, contract, and demo automation
 - `docs/`: fault model, scenario format, and sample-monitor references
+
+## Contributing
+
+Start with [`CONTRIBUTING.md`](CONTRIBUTING.md). It contains the userspace-only
+test path, the Ubuntu kernel runtime Gate, documentation expectations, and the
+pull-request checklist. Planned work is tracked in [`ROADMAP.md`](ROADMAP.md).
+
+## Versioning
+
+VDevLab follows Semantic Versioning for project releases. Scenario and report
+documents are versioned independently through their top-level
+`schema_version`. Version 1 readers reject unknown schema versions instead of
+silently interpreting them. Implementation fixes and clarifications that do not
+change the accepted document shape remain within a schema version. Adding or
+removing a field, changing its type or meaning, or changing accepted values
+requires a new schema version. The supported versions and migration notes are
+recorded in `CHANGELOG.md`.
+
+## License
+
+The kernel module, UAPI header, C userspace programs, Python package, tests,
+automation scripts, examples, and project documentation are licensed under
+GPL-2.0-only. Source files use `SPDX-License-Identifier: GPL-2.0-only`; the full
+license text is in [`LICENSE`](LICENSE).
+
+Third-party packages are not relicensed by this project. Their versions,
+purposes, and upstream license references are listed in
+[`DEPENDENCIES.md`](DEPENDENCIES.md) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

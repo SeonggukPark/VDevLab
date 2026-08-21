@@ -27,6 +27,9 @@ htmlcov/
 /logs/
 /reports/
 
+# Competition submission artifacts
+/submission/
+
 # Editor and OS files
 .DS_Store
 Thumbs.db
