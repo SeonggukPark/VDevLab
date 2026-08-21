@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-22
 > 출품 마감: 2026-08-27
-> 현재 단계: Phase 8/10 제출 준비 — PR #9 clean-clone runtime PASS, 기여 문서 로컬 검증 완료
+> 현재 단계: Phase 8/10 제출 준비 — PR #9 최신 head CI·clean-clone runtime PASS
 > 현재 브랜치: `issue-2/reproducible-environment`
-> 다음 실행: Phase 8 변경 commit·push 후 CI/self-review, PR #9 merge와 main fresh-clone 재확인
+> 다음 실행: PR #9 Ready 전환·merge 후 main fresh-clone 재확인, GitHub labels·기여 이슈 확정
 
 ## 체크 규칙
 
@@ -381,3 +381,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-20 | 제출 문서 준비 | Windows 11, Microsoft Word 2021 | 공식 양식 안내 페이지 제거, 본문 4쪽·SBOM·AI 활용 명세 작성, DOCX/PDF 7쪽 전부 렌더 검토, root GPL-2.0-only LICENSE 추가, Python 테스트 139개 통과 | `submission/` 준비본과 제출 체크리스트, 사용자 확인 항목은 명시적 placeholder 유지 |
 | 2026-08-22 | Phase 8 기여 기반 정리 | Windows 11·Python 3 | CONTRIBUTING·ROADMAP·CHANGELOG·의존성·서드파티 고지·Issue/PR 양식 추가, source 27개 SPDX 확인, YAML parse·139개 테스트·시나리오 3종 검증·diff check 통과 | `issue-2/reproducible-environment` 미커밋 작업 트리; Ubuntu fresh clone은 공개 clone 성공 후 sudo 인증에서 중단 |
 | 2026-08-22 | PR #9 clean-clone runtime Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | 공개 HTTPS clone에서 PR head `9156687` checkout 후 README demo 완료; recovery/disconnect schema v1 report 모두 PASS, 전체 assertion 통과, kernel warning 0건, module·device·monitor process cleanup과 clean worktree 확인 | PR #9, VM `/tmp/vdevlab-final.5ke6kK`, `reports/{recovery,disconnect}-20260821T184312Z.json`; 기본 main은 아직 `aa00587` |
+| 2026-08-22 | PR #9 Phase 8 최종 Gate | VMware Ubuntu 22.04·GitHub Actions | 공개 branch clone `fae857a`에서 pinned dependency 설치, 139개 테스트·YAML 3종·kernel/userspace build와 전체 demo 통과; report assertion 15개 PASS, kernel warning 0건, module·device·process·worktree cleanup 확인; CI 통과 | PR #9, CI run 32515214256, VM `/tmp/vdevlab-phase8.TnDlqk`, `reports/{recovery,disconnect}-20260821T185754Z.json` |
