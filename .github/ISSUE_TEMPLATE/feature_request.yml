@@ -1,0 +1,52 @@
+name: Feature request
+description: Propose a testable fault, scenario, report, or workflow improvement
+title: "feature: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What device-client resilience problem is not covered today?
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Proposed observable behavior
+      description: Define inputs, outputs, errors, timing, and cleanup behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Verification plan
+      description: Which unit, contract, runtime, and repeated-run checks prove it?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Primary area
+      options:
+        - Kernel or UAPI
+        - CLI or runner
+        - Scenario or report schema
+        - Documentation or contributor workflow
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and alternatives
+      description: Note schema/UAPI effects and approaches considered.
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This proposal preserves deterministic execution and complete cleanup.
+          required: true

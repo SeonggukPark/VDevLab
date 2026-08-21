@@ -1,20 +1,20 @@
 [build-system]
-requires = ["setuptools>=75"]
+requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "vdevlab"
 version = "0.1.0"
 description = "Deterministic Linux device-client resilience scenarios"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 license = { text = "GPL-2.0-only" }
 dependencies = [
-  "PyYAML>=6.0,<7",
+  "PyYAML==6.0.3",
 ]
 
 [project.optional-dependencies]
 test = [
-  "pytest>=8,<9",
+  "pytest==8.4.2",
 ]
 
 [project.scripts]

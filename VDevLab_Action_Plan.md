@@ -1,10 +1,10 @@
 # VDevLab 실행 액션 플랜
 
-> 마지막 갱신: 2026-08-19
+> 마지막 갱신: 2026-08-22
 > 출품 마감: 2026-08-27
-> 현재 단계: Phase 6 Gate 완료 — Assertion/report PR 병합 준비
-> 현재 브랜치: `issue-1/recovery-report`
-> 다음 실행: PR #8 self-review, CI 확인 및 병합
+> 현재 단계: Phase 8/10 제출 준비 — PR #9 최신 head CI·clean-clone runtime PASS
+> 현재 브랜치: `issue-2/reproducible-environment`
+> 다음 실행: PR #9 Ready 전환·merge 후 main fresh-clone 재확인, GitHub labels·기여 이슈 확정
 
 ## 체크 규칙
 
@@ -208,7 +208,7 @@
 - [x] report serialization 단위 테스트
 - [x] 의도적 PASS report 예제 저장
 - [x] 의도적 FAIL report 예제 저장
-- [ ] Assertion/report PR merge
+- [x] Assertion/report PR merge
 
 ### Phase 6 Gate
 
@@ -228,12 +228,12 @@
 - [x] demo 실패 경로 cleanup trap
 - [x] GitHub Actions kernel/userspace compile 통과
 - [x] GitHub Actions 사용자 공간 단위 테스트 통과
-- [ ] CI badge
+- [x] CI badge
 - [x] `sudo ./scripts/demo.sh` 5회 연속 실행
 - [x] 종료 후 test process 0
 - [x] 종료 후 fault state 0
 - [x] 종료 후 device node 0
-- [ ] Demo/CI PR merge
+- [x] Demo/CI PR merge
 
 ### Phase 7 Gate
 
@@ -243,23 +243,23 @@
 
 ## Phase 8 — 오픈소스 발전 가능성과 관리 증거
 
-- [ ] root `LICENSE`
-- [ ] kernel과 사용자 공간 license 범위 명시
-- [ ] 모든 소스 SPDX 확인
-- [ ] `CONTRIBUTING.md`
-- [ ] `ROADMAP.md`
-- [ ] `CHANGELOG.md`
-- [ ] `THIRD_PARTY_NOTICES.md`
-- [ ] `DEPENDENCIES.md`
-- [ ] Issue template
-- [ ] bug/feature PR template 구체화
+- [x] root `LICENSE`
+- [x] kernel과 사용자 공간 license 범위 명시
+- [x] 모든 소스 SPDX 확인
+- [x] `CONTRIBUTING.md`
+- [x] `ROADMAP.md`
+- [x] `CHANGELOG.md`
+- [x] `THIRD_PARTY_NOTICES.md`
+- [x] `DEPENDENCIES.md`
+- [x] Issue template
+- [x] bug/feature PR template 구체화
 - [ ] labels: `bug`, `enhancement`, `kernel`, `cli`, `docs`
 - [ ] `good first issue` 최소 1개
 - [ ] `help wanted` 후보 최소 1개
-- [ ] scenario/report versioning 정책
-- [ ] 외부 contributor용 사용자 공간 test 절차
+- [x] scenario/report versioning 정책
+- [x] 외부 contributor용 사용자 공간 test 절차
 - [ ] GitHub Milestone과 Issue #1~#5 상태 갱신
-- [ ] Public 저장소 비로그인 clone 확인
+- [x] Public 저장소 비로그인 clone 확인
 
 ### Phase 8 Gate
 
@@ -269,9 +269,9 @@
 
 ## Phase 9 — 개발 문서와 혁신성 설명
 
-- [ ] README 30초 소개
-- [ ] README 3분 Quick Start
-- [ ] README demo output과 JSON 예제
+- [x] README 30초 소개
+- [x] README 3분 Quick Start
+- [x] README demo output과 JSON 예제
 - [ ] `docs/architecture.md`
 - [ ] `docs/alternatives.md`
 - [ ] ADR: kernel module 선택 이유
@@ -294,7 +294,7 @@
 
 ## Phase 10 — Release와 제출
 
-- [ ] 결과보고서 초안
+- [x] 결과보고서 초안
 - [ ] 문제·대상 사용자·해결 방식 정리
 - [ ] 아키텍처 그림
 - [ ] 기존 도구 비교표
@@ -376,3 +376,9 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-19 | Phase 6 assertion 확장·report 예제 | Windows·Ubuntu/Python 3 | stdout 포함·제외, disconnect, kernel warning assertion 구현과 PASS/FAIL schema 예제 고정; 양 환경 전체 138개 테스트 통과, kernel runtime 대기 | Commits `9239259`, `5dfff58`, PR #8 |
 | 2026-08-19 | Phase 7 setup·CI | Ubuntu VM·GitHub Actions | setup 한 번으로 venv 설치, 138개 테스트, YAML 3종 검증, kernel/userspace build 통과; 신규 스크립트 Bash 구문과 CI clean target 통과 | Commit `03b42e0`, CI run 32259081736, PR #8 |
 | 2026-08-19 | Phase 6·7 runtime Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | 초기 TIMEOUT과 sub-ms 인과 순서 문제 발견·수정; demo 5회 연속, recovery/disconnect report 각 5개 PASS, kernel warning 0건, causal order 정상, fault·process·module·device cleanup 확인 | Commit `f290314`, VM `logs/demo-gate-20260819T135349Z-{1..5}.log`, PR #8 |
+| 2026-08-19 | Phase 6·7 Merge Gate | GitHub | causal report, assertions, one-command demo, Ubuntu runtime 증거와 CI 통과 후 main 병합; Issue #1 완료 처리 | PR #8, merge `aa00587`, CI run 32260935437 |
+| 2026-08-19 | Issue #2 clean clone setup | VMware Ubuntu 22.04 | 공개 HTTPS 비인증 clone 후 README setup 실행; 139개 테스트, YAML 3종, kernel/userspace build 통과, 생성물 ignore와 clean worktree 확인 | Commit `af63495`, PR #9, `/tmp/vdevlab-clean.gH6TYx` 임시 검증 후 제거 |
+| 2026-08-20 | 제출 문서 준비 | Windows 11, Microsoft Word 2021 | 공식 양식 안내 페이지 제거, 본문 4쪽·SBOM·AI 활용 명세 작성, DOCX/PDF 7쪽 전부 렌더 검토, root GPL-2.0-only LICENSE 추가, Python 테스트 139개 통과 | `submission/` 준비본과 제출 체크리스트, 사용자 확인 항목은 명시적 placeholder 유지 |
+| 2026-08-22 | Phase 8 기여 기반 정리 | Windows 11·Python 3 | CONTRIBUTING·ROADMAP·CHANGELOG·의존성·서드파티 고지·Issue/PR 양식 추가, source 27개 SPDX 확인, YAML parse·139개 테스트·시나리오 3종 검증·diff check 통과 | `issue-2/reproducible-environment` 미커밋 작업 트리; Ubuntu fresh clone은 공개 clone 성공 후 sudo 인증에서 중단 |
+| 2026-08-22 | PR #9 clean-clone runtime Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | 공개 HTTPS clone에서 PR head `9156687` checkout 후 README demo 완료; recovery/disconnect schema v1 report 모두 PASS, 전체 assertion 통과, kernel warning 0건, module·device·monitor process cleanup과 clean worktree 확인 | PR #9, VM `/tmp/vdevlab-final.5ke6kK`, `reports/{recovery,disconnect}-20260821T184312Z.json`; 기본 main은 아직 `aa00587` |
+| 2026-08-22 | PR #9 Phase 8 최종 Gate | VMware Ubuntu 22.04·GitHub Actions | 공개 branch clone `fae857a`에서 pinned dependency 설치, 139개 테스트·YAML 3종·kernel/userspace build와 전체 demo 통과; report assertion 15개 PASS, kernel warning 0건, module·device·process·worktree cleanup 확인; CI 통과 | PR #9, CI run 32515214256, VM `/tmp/vdevlab-phase8.TnDlqk`, `reports/{recovery,disconnect}-20260821T185754Z.json` |

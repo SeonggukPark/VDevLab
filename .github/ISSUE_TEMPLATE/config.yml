@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: VDevLab documentation
+    url: https://github.com/SeonggukPark/VDevLab#readme
+    about: Review setup, fault contracts, and scenario format before filing.
