@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-22
 > 출품 마감: 2026-08-27
-> 현재 단계: Phase 10/10 Release 준비 — Phase 9 문서·main fresh-clone runtime Gate 완료
-> 현재 브랜치: `codex/finalize-phase-9`
-> 다음 실행: 결과보고서 정량 증거·아키텍처 반영 후 제출 후보 commit 동결과 `v0.1.0-rc1`
+> 현재 단계: Phase 10/10 Release 준비 — 결과보고서 제출 후보본·main fresh-clone runtime Gate 완료
+> 현재 브랜치: `codex/phase10-report`
+> 다음 실행: 제출 후보 commit 동결과 `v0.1.0-rc1` 생성 후 RC 기준 3분 시연 영상 촬영
 
 ## 체크 규칙
 
@@ -295,10 +295,10 @@
 ## Phase 10 — Release와 제출
 
 - [x] 결과보고서 초안
-- [ ] 문제·대상 사용자·해결 방식 정리
-- [ ] 아키텍처 그림
-- [ ] 기존 도구 비교표
-- [ ] 정량 테스트 결과
+- [x] 문제·대상 사용자·해결 방식 정리
+- [x] 아키텍처 그림
+- [x] 기존 도구 비교표
+- [x] 정량 테스트 결과
 - [x] clean Ubuntu VM clone
 - [x] README 절차로 build/demo/cleanup
 - [ ] `v0.1.0-rc1` tag
