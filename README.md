@@ -144,6 +144,8 @@ Use `VDEVLAB_STABILITY_CYCLES` for shorter diagnostics without changing the
 
 ## Design documentation
 
+- [`DEVELOPMENT_HISTORY.md`](DEVELOPMENT_HISTORY.md): chronological development
+  phases, completion gates, runtime verification, and public Git evidence
 - [`docs/architecture.md`](docs/architecture.md): components, runtime flow,
   concurrency, cleanup, support boundary, and known limitations
 - [`docs/alternatives.md`](docs/alternatives.md): comparison with QEMU, Renode,
