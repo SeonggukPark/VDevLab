@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-22
 > 출품 마감: 2026-08-27
-> 현재 단계: Phase 10/10 Release 준비 — RC 이후 열린 치명적 결함 0건, `v0.1.0` 문서 동결
-> 현재 브랜치: `codex/release-v0.1.0`
-> 다음 실행: 최종 release commit CI 확인 후 `v0.1.0` tag와 GitHub Release 생성
+> 현재 단계: Phase 10/10 코드 릴리스 완료 — `v0.1.0` tag와 GitHub Release 공개
+> 현재 브랜치: `codex/record-v0.1.0-release`
+> 다음 실행: 제출 범위와 분리된 P1 개선 — delay 전용 시나리오
 > 범위 분리: 결과보고서·시연영상·제출 패키징과 제출 폼은 별도 진행하며 현재 개발·릴리스 작업에서 제외
 
 ## 체크 규칙
@@ -306,8 +306,8 @@
 - [ ] RC 기준 3분 시연 영상 촬영
 - [ ] 영상 명령과 README 일치 확인
 - [x] 치명적 결함만 수정
-- [ ] 최종 `v0.1.0` tag
-- [ ] GitHub Release
+- [x] 최종 `v0.1.0` tag
+- [x] GitHub Release
 - [ ] 전체 소스 압축본
 - [ ] 제출 commit hash 기록
 - [ ] 결과보고서·소스 checksum 기록
