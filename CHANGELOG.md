@@ -12,6 +12,8 @@ integer versions.
   warning assertions, parser coverage, and documented timing tolerance.
 - Focused two-byte partial-read scenario that verifies FIFO remainder
   preservation through the sample monitor's line-buffering path.
+- Optional deterministic JUnit XML projection for CI test-report viewers while
+  preserving schema v1 causal JSON as the detailed evidence source.
 
 ## [0.1.0] - 2026-08-22
 

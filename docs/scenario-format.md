@@ -144,6 +144,24 @@ application log. A scenario event sorts before an application event when both
 occur in the same millisecond, preserving the causal order at the clock's
 published resolution.
 
+## JUnit XML projection
+
+Pass `--junit-xml PATH` to write one deterministic JUnit `testsuite` containing
+one `testcase` named after the scenario. This option does not change the JSON
+schema and can be used with or without `--report`; CI integrations should keep
+both outputs so the JSON remains the source of detailed causal evidence.
+
+```bash
+vdevlab run examples/scenarios/recovery.yaml \
+  --report reports/recovery.json \
+  --junit-xml reports/recovery.xml
+```
+
+`PASS` produces a successful case, `FAIL` produces a `failure` containing the
+failed assertions, and `ERROR` or `TIMEOUT` produces an `error` with a stable
+type and message. Identical scenario reports serialize to identical XML, and
+names and messages are escaped by the standard XML serializer.
+
 ## Focused delay example
 
 [`examples/scenarios/delay.yaml`](../examples/scenarios/delay.yaml) applies the
