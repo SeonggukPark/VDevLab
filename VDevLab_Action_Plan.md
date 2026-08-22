@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-22
 > 출품 마감: 2026-08-27
-> 현재 단계: Phase 9/10 개발 문서 — architecture·alternatives·ADR 작성 및 로컬 검증 완료
-> 현재 브랜치: `codex/phase-9-documentation`
-> 다음 실행: Phase 9 문서 PR·CI 후 RC 후보 main에서 README 전체 명령과 demo 최종 재검증
+> 현재 단계: Phase 10/10 Release 준비 — Phase 9 문서·main fresh-clone runtime Gate 완료
+> 현재 브랜치: `codex/finalize-phase-9`
+> 다음 실행: 결과보고서 정량 증거·아키텍처 반영 후 제출 후보 commit 동결과 `v0.1.0-rc1`
 
 ## 체크 규칙
 
@@ -284,11 +284,11 @@
 - [x] CUSE 비교
 - [x] Linux fault injection 비교
 - [x] VDevLab이 적합하지 않은 사용 사례 명시
-- [ ] 모든 README 명령 실제 재검증
+- [x] 모든 README 명령 실제 재검증
 
 ### Phase 9 Gate
 
-- [ ] 제3자가 문서만 보고 10분 안에 demo를 시작할 수 있음
+- [x] 제3자가 문서만 보고 10분 안에 demo를 시작할 수 있음
 
 ---
 
@@ -299,8 +299,8 @@
 - [ ] 아키텍처 그림
 - [ ] 기존 도구 비교표
 - [ ] 정량 테스트 결과
-- [ ] clean Ubuntu VM clone
-- [ ] README 절차로 build/demo/cleanup
+- [x] clean Ubuntu VM clone
+- [x] README 절차로 build/demo/cleanup
 - [ ] `v0.1.0-rc1` tag
 - [ ] RC 기준 3분 시연 영상 촬영
 - [ ] 영상 명령과 README 일치 확인
@@ -383,4 +383,5 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-22 | PR #9 clean-clone runtime Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | 공개 HTTPS clone에서 PR head `9156687` checkout 후 README demo 완료; recovery/disconnect schema v1 report 모두 PASS, 전체 assertion 통과, kernel warning 0건, module·device·monitor process cleanup과 clean worktree 확인 | PR #9, VM `/tmp/vdevlab-final.5ke6kK`, `reports/{recovery,disconnect}-20260821T184312Z.json`; 기본 main은 아직 `aa00587` |
 | 2026-08-22 | PR #9 Phase 8 최종 Gate | VMware Ubuntu 22.04·GitHub Actions | 공개 branch clone `fae857a`에서 pinned dependency 설치, 139개 테스트·YAML 3종·kernel/userspace build와 전체 demo 통과; report assertion 15개 PASS, kernel warning 0건, module·device·process·worktree cleanup 확인; CI 통과 | PR #9, CI run 32515214256, VM `/tmp/vdevlab-phase8.TnDlqk`, `reports/{recovery,disconnect}-20260821T185754Z.json` |
 | 2026-08-22 | Phase 8 Merge·Contributor Gate | GitHub·VMware Ubuntu 22.04 | PR #9 self-review·CI 후 squash merge, Issue #2 자동 종료; `v0.1.0` milestone과 필수 labels 생성, good-first/help-wanted 이슈 공개; public main `b97e03d` fresh clone setup에서 pinned install·139 tests·YAML 3종·전체 build·clean worktree 통과 | PR #9 merge `b97e03d`, CI runs 32515214256·32516157826, Issues #10·#11 |
-| 2026-08-22 | Phase 9 설계 문서 | Windows 11·공식 upstream 문서 | architecture·대안 비교·ADR 2개 작성, 지원 범위·제한·부적합 사례 명시; Markdown 상대 링크·139개 테스트·YAML 3종·diff check 통과 | `codex/phase-9-documentation`, `docs/architecture.md`, `docs/alternatives.md`, `docs/adr/` |
+| 2026-08-22 | Phase 9 설계 문서 | Windows 11·공식 upstream 문서·GitHub Actions | architecture·대안 비교·ADR 2개 작성, 지원 범위·제한·부적합 사례 명시; Markdown 상대 링크·139개 테스트·YAML 3종·diff check·CI 통과 후 merge | PR #12, merge `64962ca`, CI run 32570692152, `docs/architecture.md`, `docs/alternatives.md`, `docs/adr/` |
+| 2026-08-22 | Phase 9 main fresh-clone Gate | VMware Ubuntu 22.04, kernel 6.8.0-138-generic | public main `64962ca` clone 후 pinned install·139개 테스트·YAML 3종·전체 build·개별 load/unload·전체 demo 통과; report assertion 15개 PASS, kernel warning 0건, module·device·process·worktree cleanup 확인 | VM `/tmp/vdevlab-rc-prep.Z7pyQb`, `reports/{recovery,disconnect}-20260822T114405Z.json` |
