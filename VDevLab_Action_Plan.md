@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-22
 > 출품 마감: 2026-08-27
-> 현재 단계: P1 개선 — delay 전용 시나리오 구현·141 tests·4 scenarios validation 완료, Ubuntu runtime Gate 대기
+> 현재 단계: P1 개선 — delay 전용 시나리오 Ubuntu runtime·report·cleanup Gate 완료
 > 현재 브랜치: `codex/issue-10-delay-scenario`
-> 다음 실행: PR CI 후 Ubuntu에서 delay report PASS·timing·kernel log·cleanup 확인
+> 다음 실행: PR #18 병합 후 partial-read 전용 시나리오
 > 범위 분리: 결과보고서·시연영상·제출 패키징과 제출 폼은 별도 진행하며 현재 개발·릴리스 작업에서 제외
 
 ## 체크 규칙
@@ -324,7 +324,7 @@
 
 ## P1 — 제출 이후 또는 여유 시간
 
-- [ ] delay 전용 시나리오
+- [x] delay 전용 시나리오
 - [ ] partial-read 전용 시나리오
 - [ ] JUnit XML
 - [ ] 100회 반복 안정성 테스트
