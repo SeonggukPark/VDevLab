@@ -9,6 +9,7 @@ from pathlib import Path
 import sys
 
 from . import __version__
+from .junit import report_to_junit_xml
 from .report import (
     ReportStatus,
     ScenarioReport,
@@ -31,22 +32,33 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("path", help="scenario YAML path")
     run.add_argument("--cwd", default=".", help="application working directory")
     run.add_argument("--report", help="write a causal JSON report to this path")
+    run.add_argument("--junit-xml", help="write a JUnit XML report to this path")
     return parser
 
 
-def _write_report(path: str | None, report: ScenarioReport) -> None:
-    if path is None:
-        return
-    Path(path).write_text(report.to_json(), encoding="utf-8")
+def _write_reports(
+    json_path: str | None,
+    junit_path: str | None,
+    report: ScenarioReport,
+) -> None:
+    if json_path is not None:
+        Path(json_path).write_text(report.to_json(), encoding="utf-8")
+    if junit_path is not None:
+        Path(junit_path).write_text(report_to_junit_xml(report), encoding="utf-8")
 
 
 def _write_error_report(
-    path: str | None,
+    json_path: str | None,
+    junit_path: str | None,
     scenario_name: str,
     error: BaseException,
 ) -> bool:
     try:
-        _write_report(path, build_error_report(scenario_name, error))
+        _write_reports(
+            json_path,
+            junit_path,
+            build_error_report(scenario_name, error),
+        )
     except OSError as report_error:
         print(f"error: cannot write report: {report_error}", file=sys.stderr)
         return False
@@ -82,25 +94,36 @@ def main(argv: Sequence[str] | None = None) -> int:
             scenario_name = scenario.name
             result = ScenarioRunner().run(scenario, cwd=arguments.cwd)
         except ScenarioValidationError as error:
-            _write_error_report(arguments.report, scenario_name, error)
+            _write_error_report(
+                arguments.report,
+                arguments.junit_xml,
+                scenario_name,
+                error,
+            )
             print(f"error: {error}", file=sys.stderr)
             return 2
         except KeyboardInterrupt:
             _write_error_report(
                 arguments.report,
+                arguments.junit_xml,
                 scenario_name,
                 RuntimeError("interrupted"),
             )
             print("error: interrupted", file=sys.stderr)
             return 130
         except (OSError, RunnerError) as error:
-            _write_error_report(arguments.report, scenario_name, error)
+            _write_error_report(
+                arguments.report,
+                arguments.junit_xml,
+                scenario_name,
+                error,
+            )
             print(f"error: {error}", file=sys.stderr)
             return 1
 
         report = build_scenario_report(scenario, result)
         try:
-            _write_report(arguments.report, report)
+            _write_reports(arguments.report, arguments.junit_xml, report)
         except OSError as error:
             print(f"error: cannot write report: {error}", file=sys.stderr)
             return 1

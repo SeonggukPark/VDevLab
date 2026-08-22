@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from types import SimpleNamespace
+from xml.etree import ElementTree
 
 import pytest
 
@@ -97,6 +98,29 @@ def test_run_command_writes_json_report(
     assert document["scenario"]["name"] == "normal-temperature-flow"
 
 
+def test_run_command_writes_junit_xml_report(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr(cli, "load_scenario", lambda path: _scenario())
+    monkeypatch.setattr(
+        cli,
+        "ScenarioRunner",
+        lambda: SimpleNamespace(run=lambda scenario, cwd: _result()),
+    )
+    junit_path = tmp_path / "result.xml"
+
+    assert cli.main(("run", "scenario.yaml", "--junit-xml", str(junit_path))) == 0
+
+    root = ElementTree.parse(junit_path).getroot()
+    assert root.attrib["tests"] == "1"
+    assert root.attrib["failures"] == "0"
+    assert root.attrib["errors"] == "0"
+    case = root.find("testcase")
+    assert case is not None
+    assert case.attrib["name"] == "normal-temperature-flow"
+
+
 def test_run_command_assertion_failure_returns_one(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -158,6 +182,29 @@ def test_run_command_writes_error_report_for_runner_failure(
     document = json.loads(report_path.read_text(encoding="utf-8"))
     assert document["status"] == "ERROR"
     assert document["error"]["message"] == "device unavailable"
+
+
+def test_run_command_writes_error_junit_for_runner_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr(cli, "load_scenario", lambda path: _scenario())
+    monkeypatch.setattr(
+        cli,
+        "ScenarioRunner",
+        lambda: SimpleNamespace(
+            run=lambda scenario, cwd: (_ for _ in ()).throw(
+                cli.RunnerError("device unavailable")
+            )
+        ),
+    )
+    junit_path = tmp_path / "error.xml"
+
+    assert cli.main(("run", "scenario.yaml", "--junit-xml", str(junit_path))) == 1
+
+    error = ElementTree.parse(junit_path).find("testcase/error")
+    assert error is not None
+    assert error.attrib == {"message": "device unavailable", "type": "RunnerError"}
 
 
 def test_run_command_maps_interrupt_to_130(

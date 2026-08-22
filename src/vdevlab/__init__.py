@@ -28,6 +28,7 @@ from .report import (
     build_error_report,
     build_scenario_report,
 )
+from .junit import report_to_junit_xml
 from .runner import (
     ApplicationProcess,
     ApplicationResult,
@@ -87,5 +88,6 @@ __all__ = [
     "evaluate_stdout_assertion",
     "load_scenario",
     "parse_application_log",
+    "report_to_junit_xml",
 ]
 __version__ = "0.1.0"

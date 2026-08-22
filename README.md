@@ -105,6 +105,20 @@ sudo ./scripts/unload.sh
 
 The unload script is idempotent and can also be used as a manual cleanup step.
 
+Write the causal JSON evidence and an optional JUnit XML projection together
+for CI test-report viewers:
+
+```bash
+sudo .venv/bin/vdevlab run examples/scenarios/recovery.yaml \
+  --cwd "$PWD" \
+  --report reports/recovery.json \
+  --junit-xml reports/recovery.xml
+```
+
+The XML maps `PASS` to a successful test case, `FAIL` to `failure`, and both
+`ERROR` and `TIMEOUT` to deterministic `error` elements. The schema v1 JSON
+report remains the source of detailed causal evidence.
+
 ## Project layout
 
 - `kernel/`: character device and deterministic fault contracts
