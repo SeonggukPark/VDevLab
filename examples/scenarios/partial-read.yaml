@@ -1,0 +1,40 @@
+schema_version: 1
+
+device:
+  path: /dev/vdevlab0
+
+application:
+  command:
+    - ./examples/vtemp-monitor
+    - --max-events
+    - "1"
+    - --poll-timeout-ms
+    - "250"
+  startup_timeout: 2s
+
+scenario:
+  name: deterministic-partial-read
+  timeout: 5s
+  events:
+    - at: 0ms
+      action: reset
+    - at: 100ms
+      action: fault
+      type: partial-read
+      bytes: 2
+    - at: 150ms
+      action: write
+      data: "42.5\n"
+
+assertions:
+  - event: MONITOR_STARTED
+    count: 1
+    within: 2s
+  - event: TEMPERATURE
+    count: 1
+    within: 3s
+  - type: stdout
+    contains: '"temperature_c":42.500'
+    not_contains: INVALID_INPUT
+  - type: kernel_warnings
+    count: 0

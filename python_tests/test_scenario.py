@@ -67,7 +67,14 @@ def test_valid_document_is_normalized() -> None:
 
 
 @pytest.mark.parametrize(
-    "name", ["normal.yaml", "recovery.yaml", "disconnect.yaml", "delay.yaml"]
+    "name",
+    [
+        "normal.yaml",
+        "recovery.yaml",
+        "disconnect.yaml",
+        "delay.yaml",
+        "partial-read.yaml",
+    ],
 )
 def test_checked_in_examples_are_valid(name: str) -> None:
     path = Path(__file__).parents[1] / "examples" / "scenarios" / name
@@ -86,6 +93,21 @@ def test_delay_example_normalizes_fault_duration() -> None:
     assert delay["duration_ms"] == 100
     assert any(
         assertion.get("type") == "kernel_warnings"
+        for assertion in scenario.assertions
+    )
+
+
+def test_partial_read_example_normalizes_byte_limit() -> None:
+    path = Path(__file__).parents[1] / "examples" / "scenarios" / "partial-read.yaml"
+    scenario = parse_scenario(path.read_text(encoding="utf-8"), source=str(path))
+    partial = next(
+        event for event in scenario.events if event.get("type") == "partial-read"
+    )
+
+    assert scenario.name == "deterministic-partial-read"
+    assert partial["bytes"] == 2
+    assert any(
+        assertion.get("contains") == '"temperature_c":42.500'
         for assertion in scenario.assertions
     )
 
@@ -336,7 +358,7 @@ def test_cli_expands_wildcards_on_windows(capsys: pytest.CaptureFixture[str]) ->
     pattern = str(root / "examples" / "scenarios" / "*.yaml")
 
     assert main(["validate", pattern]) == 0
-    assert capsys.readouterr().out.count("valid:") == 4
+    assert capsys.readouterr().out.count("valid:") == 5
 
 
 def test_cli_returns_two_for_invalid_file(

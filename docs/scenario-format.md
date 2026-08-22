@@ -158,6 +158,20 @@ granularity and scheduling jitter; the upper bound detects accidental repeated
 or unbounded sleeps. The focused scenario checks observable application and
 report behavior, while the kernel runtime suite measures this timing tolerance
 directly.
+
+## Focused partial-read example
+
+[`examples/scenarios/partial-read.yaml`](../examples/scenarios/partial-read.yaml)
+limits each successful read to two bytes and writes the six-byte payload
+`42.5\n`. The sample monitor retains incomplete lines across reads, so the
+scenario passes only after it reconstructs the complete payload and emits
+`"temperature_c":42.500` without `INVALID_INPUT`.
+
+The partial-read fault remains active until cleanup, never returns more than
+the configured byte limit, and never discards the unread FIFO remainder. The
+kernel contract suite verifies the per-read byte limit directly; this focused
+scenario verifies the user-visible buffering, parse, report, zero exit-code,
+kernel-warning, and cleanup behavior.
 Deterministic schema examples are available in
 [`examples/reports/recovery-pass.json`](../examples/reports/recovery-pass.json)
 and [`examples/reports/recovery-fail.json`](../examples/reports/recovery-fail.json).
