@@ -66,13 +66,28 @@ def test_valid_document_is_normalized() -> None:
     assert scenario.assertions[0]["within_ms"] == 2000
 
 
-@pytest.mark.parametrize("name", ["normal.yaml", "recovery.yaml", "disconnect.yaml"])
+@pytest.mark.parametrize(
+    "name", ["normal.yaml", "recovery.yaml", "disconnect.yaml", "delay.yaml"]
+)
 def test_checked_in_examples_are_valid(name: str) -> None:
     path = Path(__file__).parents[1] / "examples" / "scenarios" / name
     scenario = parse_scenario(path.read_text(encoding="utf-8"), source=str(path))
 
     assert scenario.events
     assert scenario.assertions
+
+
+def test_delay_example_normalizes_fault_duration() -> None:
+    path = Path(__file__).parents[1] / "examples" / "scenarios" / "delay.yaml"
+    scenario = parse_scenario(path.read_text(encoding="utf-8"), source=str(path))
+    delay = next(event for event in scenario.events if event.get("type") == "delay")
+
+    assert scenario.name == "deterministic-read-delay"
+    assert delay["duration_ms"] == 100
+    assert any(
+        assertion.get("type") == "kernel_warnings"
+        for assertion in scenario.assertions
+    )
 
 
 def test_missing_root_field_has_stable_error() -> None:
@@ -321,7 +336,7 @@ def test_cli_expands_wildcards_on_windows(capsys: pytest.CaptureFixture[str]) ->
     pattern = str(root / "examples" / "scenarios" / "*.yaml")
 
     assert main(["validate", pattern]) == 0
-    assert capsys.readouterr().out.count("valid:") == 3
+    assert capsys.readouterr().out.count("valid:") == 4
 
 
 def test_cli_returns_two_for_invalid_file(

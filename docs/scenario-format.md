@@ -143,6 +143,21 @@ Scenario dispatch timestamps use the same whole-millisecond resolution as the
 application log. A scenario event sorts before an application event when both
 occur in the same millisecond, preserving the causal order at the clock's
 published resolution.
+
+## Focused delay example
+
+[`examples/scenarios/delay.yaml`](../examples/scenarios/delay.yaml) applies the
+existing 100-millisecond read delay, writes one temperature payload, and checks
+that the monitor starts, produces one `TEMPERATURE` event, exits with code zero,
+and records no new kernel warning. Every scenario report automatically includes
+the process exit-code assertion, so a nonzero exit changes the report to `FAIL`.
+
+For the 100-millisecond request, the kernel runtime contract accepts an observed
+delay from 80 through 1,000 milliseconds. The lower allowance covers timer
+granularity and scheduling jitter; the upper bound detects accidental repeated
+or unbounded sleeps. The focused scenario checks observable application and
+report behavior, while the kernel runtime suite measures this timing tolerance
+directly.
 Deterministic schema examples are available in
 [`examples/reports/recovery-pass.json`](../examples/reports/recovery-pass.json)
 and [`examples/reports/recovery-fail.json`](../examples/reports/recovery-fail.json).
