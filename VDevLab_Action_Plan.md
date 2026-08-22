@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-22
 > 출품 마감: 2026-08-27
-> 현재 단계: P1 개선 — partial-read 전용 시나리오 구현과 runtime Gate 진행
+> 현재 단계: P1 개선 — partial-read 전용 시나리오 Ubuntu runtime·report·cleanup Gate 완료
 > 현재 브랜치: `codex/partial-read-scenario`
-> 다음 실행: tests·scenario validation 후 Ubuntu에서 report·FIFO remainder·cleanup 확인
+> 다음 실행: PR #20 병합 후 JUnit XML export
 > 범위 분리: 결과보고서·시연영상·제출 패키징과 제출 폼은 별도 진행하며 현재 개발·릴리스 작업에서 제외
 
 ## 체크 규칙
@@ -325,7 +325,7 @@
 ## P1 — 제출 이후 또는 여유 시간
 
 - [x] delay 전용 시나리오
-- [ ] partial-read 전용 시나리오
+- [x] partial-read 전용 시나리오
 - [ ] JUnit XML
 - [ ] 100회 반복 안정성 테스트
 - [ ] backend extension interface
