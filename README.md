@@ -110,6 +110,17 @@ The unload script is idempotent and can also be used as a manual cleanup step.
 - `scripts/`: setup, module lifecycle, smoke, contract, and demo automation
 - `docs/`: fault model, scenario format, and sample-monitor references
 
+## Design documentation
+
+- [`docs/architecture.md`](docs/architecture.md): components, runtime flow,
+  concurrency, cleanup, support boundary, and known limitations
+- [`docs/alternatives.md`](docs/alternatives.md): comparison with QEMU, Renode,
+  umockdev, CUSE, and Linux fault injection
+- [`docs/adr/0001-kernel-module.md`](docs/adr/0001-kernel-module.md): why the
+  reference backend is a Linux kernel module
+- [`docs/adr/0002-read-path-faults.md`](docs/adr/0002-read-path-faults.md): why
+  data faults apply to consumer reads rather than scenario injection writes
+
 ## Contributing
 
 Start with [`CONTRIBUTING.md`](CONTRIBUTING.md). It contains the userspace-only

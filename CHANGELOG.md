@@ -11,11 +11,8 @@ integer versions.
 - Contributor workflow, roadmap, dependency inventory, and third-party notices.
 - Structured bug and feature request forms.
 - Explicit licensing and schema-versioning policy.
-
-## [0.1.0] - Unreleased
-
-### Added
-
+- Architecture, alternative-tool comparison, support boundary, known
+  limitations, and accepted design decisions.
 - Linux character device with deterministic counted EIO, delay, partial-read,
   disconnect, reconnect, and reset contracts.
 - `vdevlab-ctl` fault-control utility and kernel contract suite.
@@ -28,4 +25,3 @@ integer versions.
 - Ubuntu build CI and runtime evidence procedures.
 
 [Unreleased]: https://github.com/SeonggukPark/VDevLab/commits/main
-[0.1.0]: https://github.com/SeonggukPark/VDevLab/tree/main
