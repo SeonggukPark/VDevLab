@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-22
 > 출품 마감: 2026-08-27
-> 현재 단계: Phase 10/10 Release 준비 — 결과보고서 제출 후보본·main fresh-clone runtime Gate 완료
-> 현재 브랜치: `codex/phase10-report`
-> 다음 실행: 제출 후보 commit 동결과 `v0.1.0-rc1` 생성 후 RC 기준 3분 시연 영상 촬영
+> 현재 단계: Phase 10/10 Release 준비 — `v0.1.0-rc1` 후보 commit 동결 완료
+> 현재 브랜치: `codex/record-rc1-tag`
+> 다음 실행: RC 기준 3분 시연 영상 촬영과 영상 명령·README 일치 확인
 
 ## 체크 규칙
 
@@ -301,7 +301,7 @@
 - [x] 정량 테스트 결과
 - [x] clean Ubuntu VM clone
 - [x] README 절차로 build/demo/cleanup
-- [ ] `v0.1.0-rc1` tag
+- [x] `v0.1.0-rc1` tag
 - [ ] RC 기준 3분 시연 영상 촬영
 - [ ] 영상 명령과 README 일치 확인
 - [ ] 치명적 결함만 수정
