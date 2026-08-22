@@ -6,6 +6,8 @@ integer versions.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-22
+
 ### Added
 
 - Contributor workflow, roadmap, dependency inventory, and third-party notices.
@@ -24,4 +26,15 @@ integer versions.
   report, and cleanup automation.
 - Ubuntu build CI and runtime evidence procedures.
 
-[Unreleased]: https://github.com/SeonggukPark/VDevLab/commits/main
+### Verified
+
+- 139 Python tests and all three checked-in scenarios pass.
+- Recovery and disconnect reports pass 8/8 and 7/7 assertions respectively.
+- Module lifecycle passed 20 cycles, smoke testing passed 10 cycles, and the
+  complete demo passed five consecutive cycles.
+- Fresh-clone runtime gates passed on Ubuntu 22.04 with Linux
+  `6.8.0-136-generic` and `6.8.0-138-generic`, with zero new kernel warnings
+  and zero residual device, module, or monitor state.
+
+[Unreleased]: https://github.com/SeonggukPark/VDevLab/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/SeonggukPark/VDevLab/releases/tag/v0.1.0
