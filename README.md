@@ -119,6 +119,18 @@ The XML maps `PASS` to a successful test case, `FAIL` to `failure`, and both
 `ERROR` and `TIMEOUT` to deterministic `error` elements. The schema v1 JSON
 report remains the source of detailed causal evidence.
 
+Run the privileged 100-cycle stability Gate after setup on a supported Ubuntu
+host. It reuses the complete monitor lifecycle, checks new kernel warnings and
+final cleanup, and writes a machine-readable schema v1 summary plus per-cycle
+JSONL logs:
+
+```bash
+./scripts/run-stability-test.sh
+```
+
+Use `VDEVLAB_STABILITY_CYCLES` for shorter diagnostics without changing the
+100-cycle Gate default.
+
 ## Project layout
 
 - `kernel/`: character device and deterministic fault contracts

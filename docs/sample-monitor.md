@@ -73,3 +73,19 @@ For a shorter diagnostic run, override the cycle count:
 ```bash
 VDEVLAB_SMOKE_CYCLES=1 make smoke-test
 ```
+
+## Stability Gate
+
+`scripts/run-stability-test.sh` runs the same complete smoke lifecycle 100
+times by default. It performs setup once, gives every cycle a distinct JSONL
+log, checks new `dmesg` warning-or-higher patterns, verifies that the module,
+device node, and monitor process are absent, and writes `summary.json` with the
+requested and completed cycles, elapsed seconds, warning count, status, and log
+paths.
+
+```bash
+./scripts/run-stability-test.sh
+VDEVLAB_STABILITY_CYCLES=2 ./scripts/run-stability-test.sh
+```
+
+The second form is a diagnostic only; the project Gate requires 100/100 cycles.

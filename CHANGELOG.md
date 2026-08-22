@@ -14,6 +14,8 @@ integer versions.
   preservation through the sample monitor's line-buffering path.
 - Optional deterministic JUnit XML projection for CI test-report viewers while
   preserving schema v1 causal JSON as the detailed evidence source.
+- Reusable 100-cycle stability Gate with per-cycle JSONL logs, kernel-warning
+  checks, cleanup invariants, and a machine-readable schema v1 summary.
 
 ## [0.1.0] - 2026-08-22
 

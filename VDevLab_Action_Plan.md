@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-22
 > 출품 마감: 2026-08-27
-> 현재 단계: P1 개선 — 선택적 JUnit XML export 152 tests·Linux CI 완료
-> 현재 브랜치: `codex/issue-11-junit-xml`
-> 다음 실행: PR #21 병합 후 100회 반복 안정성 Gate
+> 현재 단계: P1 개선 — 100회 반복 안정성 runner 구현·검증
+> 현재 브랜치: `codex/100-cycle-stability`
+> 다음 실행: shell syntax·짧은 diagnostic 후 Ubuntu 100/100 runtime Gate
 > 범위 분리: 결과보고서·시연영상·제출 패키징과 제출 폼은 별도 진행하며 현재 개발·릴리스 작업에서 제외
 
 ## 체크 규칙

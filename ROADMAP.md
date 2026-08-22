@@ -18,7 +18,8 @@ and reproducible evidence.
 - Delay-focused and partial-read-focused scenarios.
 - JUnit XML output for CI systems.
 - Recovery latency distributions and repeated-run summaries.
-- A 100-cycle stability Gate with machine-readable results.
+- A 100-cycle stability Gate with machine-readable results, available through
+  `scripts/run-stability-test.sh`.
 
 ## v0.3 — Backend extensibility
 
