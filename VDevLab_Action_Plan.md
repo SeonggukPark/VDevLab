@@ -2,9 +2,9 @@
 
 > 마지막 갱신: 2026-08-22
 > 출품 마감: 2026-08-27
-> 현재 단계: Phase 8/10 제출 준비 — PR #9 최신 head CI·clean-clone runtime PASS
-> 현재 브랜치: `issue-2/reproducible-environment`
-> 다음 실행: PR #9 Ready 전환·merge 후 main fresh-clone 재확인, GitHub labels·기여 이슈 확정
+> 현재 단계: Phase 9/10 개발 문서 — architecture·alternatives·ADR 작성 및 로컬 검증 완료
+> 현재 브랜치: `codex/phase-9-documentation`
+> 다음 실행: Phase 9 문서 PR·CI 후 RC 후보 main에서 README 전체 명령과 demo 최종 재검증
 
 ## 체크 규칙
 
@@ -253,17 +253,17 @@
 - [x] `DEPENDENCIES.md`
 - [x] Issue template
 - [x] bug/feature PR template 구체화
-- [ ] labels: `bug`, `enhancement`, `kernel`, `cli`, `docs`
-- [ ] `good first issue` 최소 1개
-- [ ] `help wanted` 후보 최소 1개
+- [x] labels: `bug`, `enhancement`, `kernel`, `cli`, `docs`
+- [x] `good first issue` 최소 1개
+- [x] `help wanted` 후보 최소 1개
 - [x] scenario/report versioning 정책
 - [x] 외부 contributor용 사용자 공간 test 절차
-- [ ] GitHub Milestone과 Issue #1~#5 상태 갱신
+- [x] GitHub Milestone과 Issue #1~#5 상태 갱신
 - [x] Public 저장소 비로그인 clone 확인
 
 ### Phase 8 Gate
 
-- [ ] 새로운 기여자가 README와 CONTRIBUTING만으로 test와 PR 준비 가능
+- [x] 새로운 기여자가 README와 CONTRIBUTING만으로 test와 PR 준비 가능
 
 ---
 
@@ -272,18 +272,18 @@
 - [x] README 30초 소개
 - [x] README 3분 Quick Start
 - [x] README demo output과 JSON 예제
-- [ ] `docs/architecture.md`
-- [ ] `docs/alternatives.md`
-- [ ] ADR: kernel module 선택 이유
-- [ ] ADR: data fault를 read에만 적용한 이유
-- [ ] 지원 Ubuntu/kernel 범위
-- [ ] 알려진 제한사항
-- [ ] QEMU 비교
-- [ ] Renode 비교
-- [ ] umockdev 비교
-- [ ] CUSE 비교
-- [ ] Linux fault injection 비교
-- [ ] VDevLab이 적합하지 않은 사용 사례 명시
+- [x] `docs/architecture.md`
+- [x] `docs/alternatives.md`
+- [x] ADR: kernel module 선택 이유
+- [x] ADR: data fault를 read에만 적용한 이유
+- [x] 지원 Ubuntu/kernel 범위
+- [x] 알려진 제한사항
+- [x] QEMU 비교
+- [x] Renode 비교
+- [x] umockdev 비교
+- [x] CUSE 비교
+- [x] Linux fault injection 비교
+- [x] VDevLab이 적합하지 않은 사용 사례 명시
 - [ ] 모든 README 명령 실제 재검증
 
 ### Phase 9 Gate
@@ -382,3 +382,5 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-22 | Phase 8 기여 기반 정리 | Windows 11·Python 3 | CONTRIBUTING·ROADMAP·CHANGELOG·의존성·서드파티 고지·Issue/PR 양식 추가, source 27개 SPDX 확인, YAML parse·139개 테스트·시나리오 3종 검증·diff check 통과 | `issue-2/reproducible-environment` 미커밋 작업 트리; Ubuntu fresh clone은 공개 clone 성공 후 sudo 인증에서 중단 |
 | 2026-08-22 | PR #9 clean-clone runtime Gate | VMware Ubuntu 22.04, kernel 6.8.0-136-generic | 공개 HTTPS clone에서 PR head `9156687` checkout 후 README demo 완료; recovery/disconnect schema v1 report 모두 PASS, 전체 assertion 통과, kernel warning 0건, module·device·monitor process cleanup과 clean worktree 확인 | PR #9, VM `/tmp/vdevlab-final.5ke6kK`, `reports/{recovery,disconnect}-20260821T184312Z.json`; 기본 main은 아직 `aa00587` |
 | 2026-08-22 | PR #9 Phase 8 최종 Gate | VMware Ubuntu 22.04·GitHub Actions | 공개 branch clone `fae857a`에서 pinned dependency 설치, 139개 테스트·YAML 3종·kernel/userspace build와 전체 demo 통과; report assertion 15개 PASS, kernel warning 0건, module·device·process·worktree cleanup 확인; CI 통과 | PR #9, CI run 32515214256, VM `/tmp/vdevlab-phase8.TnDlqk`, `reports/{recovery,disconnect}-20260821T185754Z.json` |
+| 2026-08-22 | Phase 8 Merge·Contributor Gate | GitHub·VMware Ubuntu 22.04 | PR #9 self-review·CI 후 squash merge, Issue #2 자동 종료; `v0.1.0` milestone과 필수 labels 생성, good-first/help-wanted 이슈 공개; public main `b97e03d` fresh clone setup에서 pinned install·139 tests·YAML 3종·전체 build·clean worktree 통과 | PR #9 merge `b97e03d`, CI runs 32515214256·32516157826, Issues #10·#11 |
+| 2026-08-22 | Phase 9 설계 문서 | Windows 11·공식 upstream 문서 | architecture·대안 비교·ADR 2개 작성, 지원 범위·제한·부적합 사례 명시; Markdown 상대 링크·139개 테스트·YAML 3종·diff check 통과 | `codex/phase-9-documentation`, `docs/architecture.md`, `docs/alternatives.md`, `docs/adr/` |
