@@ -1,6 +1,6 @@
 # VDevLab 실행 액션 플랜
 
-> 마지막 갱신: 2026-08-22
+> 마지막 갱신: 2026-08-23
 > 출품 마감: 2026-08-27
 > 현재 단계: 계획된 개발·runtime 검증 완료
 > 현재 브랜치: `main`
@@ -388,3 +388,4 @@ Gate를 통과할 때 아래 표에 실제 증거를 추가한다.
 | 2026-08-22 | Phase 9 main fresh-clone Gate | VMware Ubuntu 22.04, kernel 6.8.0-138-generic | public main `64962ca` clone 후 pinned install·139개 테스트·YAML 3종·전체 build·개별 load/unload·전체 demo 통과; report assertion 15개 PASS, kernel warning 0건, module·device·process·worktree cleanup 확인 | VM `/tmp/vdevlab-rc-prep.Z7pyQb`, `reports/{recovery,disconnect}-20260822T114405Z.json` |
 | 2026-08-22 | P1 100-cycle stability Gate | VMware Ubuntu 22.04 | 2회 diagnostic 후 100/100 complete lifecycle 통과; 신규 kernel warning 0건, module·device·monitor cleanup 확인, schema v1 summary PASS | Commit `ff183a1`, PR #23, VM `/tmp/vdevlab-rc-prep.Z7pyQb`, `logs/stability-*/summary.json` |
 | 2026-08-22 | P1 stability Merge Gate | GitHub·VMware Ubuntu 22.04 | 152개 테스트·YAML 5종·CI·100/100 runtime Gate 통과 후 runner 병합, Issue #22 종료 | PR #23, merge `afbb0f2`, CI runs 32575518037·32575786778 |
+| 2026-08-23 | MIT relicensing audit | Windows 11·upstream license records | 직접 runtime·test·build 의존성 MIT 확인, 외부 vendored source·외부 기여자 없음 확인; source 30개 SPDX, GPL 전문 보존 hash, shell syntax, 152 tests·YAML 5종, wheel `License-Expression: MIT` 통과 | Issue #25, `codex/mit-relicense`, `THIRD_PARTY_NOTICES.md`, `LICENSES/GPL-2.0-only.txt` |

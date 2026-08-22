@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-License-Identifier: MIT
 
 obj-m += vdevlab_core.o
 ccflags-y += -I$(src)/../include

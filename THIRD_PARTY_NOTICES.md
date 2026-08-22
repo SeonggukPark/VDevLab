@@ -1,6 +1,8 @@
 # Third-party notices
 
-VDevLab source code is GPL-2.0-only. The third-party projects below retain
+Current VDevLab source code is MIT, except for the loadable kernel module,
+which is available under `GPL-2.0-only OR MIT`. The existing `v0.1.0` tag
+retains its original GPL-2.0-only grant. The third-party projects below retain
 their own copyright and license terms. No third-party source is copied into
 this repository.
 

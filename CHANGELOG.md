@@ -17,6 +17,12 @@ integer versions.
 - Reusable 100-cycle stability Gate with per-cycle JSONL logs, kernel-warning
   checks, cleanup invariants, and a machine-readable schema v1 summary.
 
+### Changed
+
+- Relicensed current project source under MIT for permissive reuse, with the
+  loadable kernel module available under `GPL-2.0-only OR MIT`. The existing
+  `v0.1.0` release retains its original GPL-2.0-only grant.
+
 ## [0.1.0] - 2026-08-22
 
 ### Added
