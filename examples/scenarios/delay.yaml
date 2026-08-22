@@ -1,0 +1,40 @@
+schema_version: 1
+
+device:
+  path: /dev/vdevlab0
+
+application:
+  command:
+    - ./examples/vtemp-monitor
+    - --max-events
+    - "1"
+    - --poll-timeout-ms
+    - "250"
+  startup_timeout: 2s
+
+scenario:
+  name: deterministic-read-delay
+  timeout: 5s
+  events:
+    - at: 0ms
+      action: reset
+    - at: 100ms
+      action: fault
+      type: delay
+      duration: 100ms
+    - at: 150ms
+      action: write
+      data: "33\n"
+
+assertions:
+  - event: MONITOR_STARTED
+    count: 1
+    within: 2s
+  - event: TEMPERATURE
+    count: 1
+    within: 3s
+  - type: stdout
+    contains: TEMPERATURE
+    not_contains: READ_FAILED
+  - type: kernel_warnings
+    count: 0

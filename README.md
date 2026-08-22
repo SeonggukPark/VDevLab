@@ -75,6 +75,9 @@ reports/disconnect-YYYYMMDDTHHMMSSZ.json
 Deterministic schema examples are checked in at
 [`examples/reports/recovery-pass.json`](examples/reports/recovery-pass.json) and
 [`examples/reports/recovery-fail.json`](examples/reports/recovery-fail.json).
+The focused [`delay.yaml`](examples/scenarios/delay.yaml) scenario demonstrates
+the existing deterministic read-delay contract and its documented timing
+tolerance without changing the schema or kernel UAPI.
 
 ## Individual commands
 

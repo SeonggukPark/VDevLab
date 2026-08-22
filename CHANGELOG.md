@@ -6,6 +6,11 @@ integer versions.
 
 ## [Unreleased]
 
+### Added
+
+- Focused deterministic read-delay scenario with observable output, kernel
+  warning assertions, parser coverage, and documented timing tolerance.
+
 ## [0.1.0] - 2026-08-22
 
 ### Added
