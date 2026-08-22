@@ -78,6 +78,9 @@ Deterministic schema examples are checked in at
 The focused [`delay.yaml`](examples/scenarios/delay.yaml) scenario demonstrates
 the existing deterministic read-delay contract and its documented timing
 tolerance without changing the schema or kernel UAPI.
+The focused [`partial-read.yaml`](examples/scenarios/partial-read.yaml) scenario
+limits reads to two bytes and verifies that the monitor preserves and parses
+the complete FIFO payload without changing the schema or kernel UAPI.
 
 ## Individual commands
 

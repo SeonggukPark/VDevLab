@@ -10,6 +10,8 @@ integer versions.
 
 - Focused deterministic read-delay scenario with observable output, kernel
   warning assertions, parser coverage, and documented timing tolerance.
+- Focused two-byte partial-read scenario that verifies FIFO remainder
+  preservation through the sample monitor's line-buffering path.
 
 ## [0.1.0] - 2026-08-22
 
