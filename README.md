@@ -24,7 +24,7 @@ reports can be adapted to other Linux device clients.
 The runtime Gate currently covers:
 
 - Ubuntu 22.04 LTS
-- Linux `6.8.0-136-generic` on x86-64
+- Linux `6.8.0-136-generic` and `6.8.0-138-generic` on x86-64
 - GCC 12
 - Python 3.10
 

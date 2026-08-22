@@ -25,7 +25,7 @@ python3 -m venv .venv
 | Component | Verified value | Purpose |
 |---|---|---|
 | Ubuntu | 22.04 LTS | Runtime Gate environment |
-| Linux | 6.8.0-136-generic x86-64 | Verified module runtime |
+| Linux | 6.8.0-136-generic and 6.8.0-138-generic x86-64 | Verified module runtime |
 | GCC | 12 | Kernel and C userspace build |
 | GNU Make | Ubuntu 22.04 package | Build orchestration |
 | matching kernel headers | `linux-headers-$(uname -r)` | Kernel module build |

@@ -117,10 +117,10 @@ The runtime Gate is not complete unless all of these are true:
 ## Supported and verified environment
 
 The v0.1 runtime Gate covers Ubuntu 22.04 LTS on x86-64, Linux
-`6.8.0-136-generic`, GCC 12, and Python 3.10. The Python package declares
-support for Python 3.10 through 3.12. Other recent Linux kernels may build, but
-they are best-effort until the same contract and demo Gates pass with matching
-headers.
+`6.8.0-136-generic` and `6.8.0-138-generic`, GCC 12, and Python 3.10. The
+Python package declares support for Python 3.10 through 3.12. Other recent
+Linux kernels may build, but they are best-effort until the same contract and
+demo Gates pass with matching headers.
 
 The runtime requires permission to load an out-of-tree module, access the
 device, and read the kernel log. Hosted GitHub Actions validates compilation
