@@ -1,11 +1,33 @@
-# VDevLab 실행 액션 플랜
+# VDevLab 개발 이력
 
-> 마지막 갱신: 2026-08-23
-> 출품 마감: 2026-08-27
-> 현재 단계: 계획된 개발·runtime 검증 완료
-> 현재 브랜치: `main`
-> 다음 실행: 추가 개발 없음 (별도 진행 중인 결과보고서·영상·제출 작업 제외)
-> 범위 분리: 결과보고서·시연영상·제출 패키징과 제출 폼은 별도 진행하며 현재 개발·릴리스 작업에서 제외
+## 문서 안내
+
+이 문서는 VDevLab의 계획뿐 아니라 실제 구현 순서, 완료 조건, 검증 결과를 함께 기록하는 공개 개발 이력이다. 기능별 변경 내용은 [Git 커밋 이력](https://github.com/SeonggukPark/VDevLab/commits/main/), 논의와 완료 조건은 [Issues](https://github.com/SeonggukPark/VDevLab/issues), 코드 검토와 병합 과정은 [Pull Requests](https://github.com/SeonggukPark/VDevLab/pulls), 자동 빌드·테스트 결과는 [GitHub Actions](https://github.com/SeonggukPark/VDevLab/actions), 배포 결과는 [Releases](https://github.com/SeonggukPark/VDevLab/releases)에서 누구나 확인할 수 있다.
+
+### 단계별 개발 이력 요약
+
+| 기간 | 단계 | 주요 개발 내용 | 상태 및 공개 증거 |
+|---|---|---|---|
+| 2026-08-07~16 | Phase 0: 기반 구현 | 저장소 생성, 문자 디바이스 등록, `kfifo` 기반 read/write, `poll()`, fault UAPI·ioctl·제어 도구 구현 | 완료 · commits `31f59a8`~`c88d432` |
+| 2026-08-18 | Phase 1: 결정적 장애 계약 | 횟수 기반 EIO, delay, disconnect, blocked read/poll wake-up, kernel contract test와 CI 구축 | 완료 · [PR #6](https://github.com/SeonggukPark/VDevLab/pull/6) |
+| 2026-08-18 | Phase 2: Kernel fault 완성 | partial-read, reconnect, full reset, 오류 범위 검증과 module lifecycle 검증 | 완료 · commit `80f913a`, [PR #6](https://github.com/SeonggukPark/VDevLab/pull/6) |
+| 2026-08-18 | Phase 3: 테스트 애플리케이션 | 온도 모니터, 구조화 로그, EIO 재시도·복구, disconnect 처리와 smoke test 구현 | 완료 · commit `04d400e`, [PR #6](https://github.com/SeonggukPark/VDevLab/pull/6) |
+| 2026-08-18 | Phase 4: YAML Schema·Parser | 버전형 YAML 스키마, 필수 필드·자료형·시간 순서 검증, CLI와 parser 테스트 구현 | 완료 · commit `64652b7`, [PR #6](https://github.com/SeonggukPark/VDevLab/pull/6) |
+| 2026-08-18~19 | Phase 5: Scenario Runner | monotonic scheduler, ioctl backend, 애플리케이션 실행·출력 수집, timeout과 모든 종료 경로 cleanup 구현 | 완료 · [PR #7](https://github.com/SeonggukPark/VDevLab/pull/7) |
+| 2026-08-19 | Phase 6: 분석·보고서 | EIO·retry·recovery 분석, 복구 지연시간 측정, assertion과 인과관계 JSON 보고서 구현 | 완료 · [PR #8](https://github.com/SeonggukPark/VDevLab/pull/8) |
+| 2026-08-19 | Phase 7: End-to-End·CI | setup/load/run/report/unload 자동화, recovery·disconnect 시나리오와 반복 runtime Gate 구축 | 완료 · [PR #8](https://github.com/SeonggukPark/VDevLab/pull/8) |
+| 2026-08-19~22 | Phase 8: 오픈소스 기반 | 재현 가능한 설치, 기여 가이드, 로드맵, 변경 기록, 의존성·라이선스 고지와 Issue/PR 체계 정비 | 완료 · [PR #9](https://github.com/SeonggukPark/VDevLab/pull/9) |
+| 2026-08-22 | Phase 9: 설계 문서 | 아키텍처, 대안 비교, ADR, 지원 환경·제한사항과 fresh-clone 실행 절차 문서화 | 완료 · [PR #12](https://github.com/SeonggukPark/VDevLab/pull/12) |
+| 2026-08-22 | Phase 10: 릴리스 | runtime Gate 재검증, `v0.1.0-rc1`과 `v0.1.0` 태그·GitHub Release 생성 | 릴리스 완료 · [v0.1.0](https://github.com/SeonggukPark/VDevLab/releases/tag/v0.1.0), 제출 작업 진행 중 |
+| 2026-08-22 | P1 확장 기능 | delay·partial-read 전용 시나리오, JUnit XML, 100회 반복 안정성 Gate 추가 | 완료 · [PR #18](https://github.com/SeonggukPark/VDevLab/pull/18), [PR #20](https://github.com/SeonggukPark/VDevLab/pull/20), [PR #21](https://github.com/SeonggukPark/VDevLab/pull/21), [PR #23](https://github.com/SeonggukPark/VDevLab/pull/23) |
+| 2026-08-23 | 라이선스 정비 | 직접 의존성·소스 저작권 감사 후 사용자 공간 MIT, kernel module dual MIT/GPL 정책과 고지 정리 | 완료 · [PR #26](https://github.com/SeonggukPark/VDevLab/pull/26) |
+
+### 개발 이력 갱신 규칙
+
+- 새로운 기능은 관련 Issue, branch, commit, PR, CI/runtime 검증 순서로 진행한다.
+- 기능 완료 시 위 요약표, 해당 Phase 체크리스트와 문서 하단의 검증 기록을 함께 갱신한다.
+- 검증되지 않은 작업은 완료로 표시하지 않으며, 실패와 수정 과정도 관련 Issue·PR 또는 검증 기록에 남긴다.
+- 공개 증거에는 가능한 경우 commit hash, PR, CI run, 실행 환경과 로그 위치를 함께 기록한다.
 
 ## 체크 규칙
 
