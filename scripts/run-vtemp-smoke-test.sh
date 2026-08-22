@@ -7,9 +7,9 @@ project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 module_path="${project_root}/kernel/vdevlab_core.ko"
 monitor_path="${project_root}/examples/vtemp-monitor"
 control_path="${project_root}/tools/vdevlab-ctl"
-log_dir="${project_root}/logs"
+log_dir="${VDEVLAB_LOG_DIR:-${project_root}/logs}"
 smoke_cycles="${VDEVLAB_SMOKE_CYCLES:-10}"
-run_id="$(date -u +%Y%m%dT%H%M%SZ)"
+run_id="${VDEVLAB_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}"
 module_loaded=0
 monitor_pid=""
 

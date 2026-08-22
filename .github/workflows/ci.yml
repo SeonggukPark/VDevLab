@@ -43,6 +43,7 @@ jobs:
           bash -n scripts/demo.sh
           bash -n scripts/run-kernel-contract-test.sh
           bash -n scripts/run-vtemp-smoke-test.sh
+          bash -n scripts/run-stability-test.sh
 
       - name: Install scenario parser
         run: python -m pip install --editable '.[test]'
