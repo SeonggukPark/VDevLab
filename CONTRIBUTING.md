@@ -64,7 +64,8 @@ node, monitor process, and active fault are gone after cleanup.
 - Document user-visible CLI, ioctl, scenario, report, or fault behavior.
 - Keep scenario and report compatibility rules in mind; incompatible document
   changes require a new `schema_version` and migration notes.
-- Add `SPDX-License-Identifier: GPL-2.0-only` to new source files.
+- Add `SPDX-License-Identifier: MIT` to new source files.
+- Preserve `GPL-2.0-only OR MIT` on the loadable kernel module source.
 - Do not commit build products, virtual environments, generated reports, VM
   logs containing machine details, secrets, or submission-only artifacts.
 - Update `CHANGELOG.md` for a user-visible change.
@@ -91,4 +92,5 @@ It cannot load the module on a hosted runner, so the author must attach Ubuntu
 runtime evidence for changes to kernel behavior.
 
 By contributing, you agree that your contribution is licensed under the
-project's GPL-2.0-only license.
+applicable project license: MIT by default, or `GPL-2.0-only OR MIT` for the
+loadable kernel module source.

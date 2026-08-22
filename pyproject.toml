@@ -7,7 +7,7 @@ name = "vdevlab"
 version = "0.1.0"
 description = "Deterministic Linux device-client resilience scenarios"
 requires-python = ">=3.10,<3.13"
-license = { text = "GPL-2.0-only" }
+license = "MIT"
 dependencies = [
   "PyYAML==6.0.3",
 ]

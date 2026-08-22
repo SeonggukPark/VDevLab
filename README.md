@@ -172,10 +172,15 @@ recorded in `CHANGELOG.md`.
 
 ## License
 
-The kernel module, UAPI header, C userspace programs, Python package, tests,
-automation scripts, examples, and project documentation are licensed under
-GPL-2.0-only. Source files use `SPDX-License-Identifier: GPL-2.0-only`; the full
-license text is in [`LICENSE`](LICENSE).
+The UAPI header, C userspace programs, Python package, tests, automation
+scripts, examples, and project documentation are licensed under MIT. The
+loadable kernel module is dual-licensed under `GPL-2.0-only OR MIT` and uses
+`MODULE_LICENSE("Dual MIT/GPL")` for the kernel loader. The MIT text is in
+[`LICENSE`](LICENSE), and the GPL-2.0-only option is retained in
+[`LICENSES/GPL-2.0-only.txt`](LICENSES/GPL-2.0-only.txt).
+
+The existing `v0.1.0` tag remains available under its original GPL-2.0-only
+grant. Current source files carry their applicable SPDX license expression.
 
 Third-party packages are not relicensed by this project. Their versions,
 purposes, and upstream license references are listed in

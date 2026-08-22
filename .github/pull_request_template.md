@@ -56,5 +56,6 @@ Commands and results:
 - [ ] User-visible behavior and UAPI changes are documented
 - [ ] Tests would fail without the intended change
 - [ ] Known limitations are recorded
-- [ ] New source files include `SPDX-License-Identifier: GPL-2.0-only`
+- [ ] New source files include `SPDX-License-Identifier: MIT`
+- [ ] Kernel module changes preserve `GPL-2.0-only OR MIT`
 - [ ] User-visible changes are recorded in `CHANGELOG.md`

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: GPL-2.0-only OR MIT
 /*
  * VDevLab - virtual device test framework
  *
@@ -434,4 +434,4 @@ module_exit(vdevlab_exit);
 
 MODULE_AUTHOR("VDevLab contributors");
 MODULE_DESCRIPTION("VDevLab virtual character device core");
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("Dual MIT/GPL");

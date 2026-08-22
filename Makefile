@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-License-Identifier: MIT
 
 .PHONY: all kernel-module userspace tools tests examples python-test setup demo contract-test smoke-test clean
 
